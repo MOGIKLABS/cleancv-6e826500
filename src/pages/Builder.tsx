@@ -10,7 +10,9 @@ import ATSChecker from "@/components/ATSChecker";
 import ApplicationLog from "@/components/ApplicationLog";
 import CustomisationPanel from "@/components/CustomisationPanel";
 import CVUpload from "@/components/CVUpload";
-import { CVData, CVCustomisation, defaultCVData, defaultCustomisation } from "@/types/cv";
+import CoverLetterEditor from "@/components/CoverLetterEditor";
+import CoverLetterPreview from "@/components/CoverLetterPreview";
+import { CVData, CVCustomisation, CoverLetterData, defaultCVData, defaultCustomisation, defaultCoverLetterData } from "@/types/cv";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -18,6 +20,9 @@ const Builder = () => {
   const navigate = useNavigate();
   const [cvData, setCvData] = useState<CVData>(defaultCVData);
   const [customisation, setCustomisation] = useState<CVCustomisation>(defaultCustomisation);
+  const [coverLetter, setCoverLetter] = useState<CoverLetterData>(defaultCoverLetterData);
+  const [jobDescription, setJobDescription] = useState("");
+  const [activeTab, setActiveTab] = useState("editor");
   const [polishing, setPolishing] = useState(false);
   const [mobileView, setMobileView] = useState<"editor" | "preview">("editor");
 
@@ -38,10 +43,11 @@ const Builder = () => {
   };
 
   const editorPanel = (
-    <Tabs defaultValue="editor" className="flex flex-col flex-1 overflow-hidden">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
       <div className="border-b border-border px-3 sm:px-4 pt-2 overflow-x-auto">
         <TabsList className="h-9 w-full sm:w-auto">
           <TabsTrigger value="editor" className="text-xs">Editor</TabsTrigger>
+          <TabsTrigger value="cover" className="text-xs">Cover Letter</TabsTrigger>
           <TabsTrigger value="style" className="text-xs">Style</TabsTrigger>
           <TabsTrigger value="upload" className="text-xs">Import</TabsTrigger>
           <TabsTrigger value="ats" className="text-xs">ATS</TabsTrigger>
@@ -51,6 +57,11 @@ const Builder = () => {
       <TabsContent value="editor" className="flex-1 overflow-hidden mt-0">
         <ScrollArea className="h-full">
           <CVEditor data={cvData} onChange={setCvData} />
+        </ScrollArea>
+      </TabsContent>
+      <TabsContent value="cover" className="flex-1 overflow-hidden mt-0">
+        <ScrollArea className="h-full">
+          <CoverLetterEditor data={coverLetter} cvData={cvData} jobDescription={jobDescription} onChange={setCoverLetter} />
         </ScrollArea>
       </TabsContent>
       <TabsContent value="style" className="flex-1 overflow-hidden mt-0">
@@ -67,7 +78,7 @@ const Builder = () => {
       </TabsContent>
       <TabsContent value="ats" className="flex-1 overflow-hidden mt-0">
         <ScrollArea className="h-full">
-          <ATSChecker cvData={cvData} />
+          <ATSChecker cvData={cvData} jobDescription={jobDescription} onJobDescriptionChange={setJobDescription} />
         </ScrollArea>
       </TabsContent>
       <TabsContent value="log" className="flex-1 overflow-hidden mt-0">
@@ -81,7 +92,11 @@ const Builder = () => {
   const previewPanel = (
     <div className="p-4 sm:p-8 flex items-start justify-center min-h-full">
       <div className="w-full max-w-[210mm] origin-top scale-[0.6] sm:scale-[0.75] md:scale-100">
-        <CVPreview data={cvData} customisation={customisation} />
+        {activeTab === "cover" ? (
+          <CoverLetterPreview data={coverLetter} cvData={cvData} customisation={customisation} />
+        ) : (
+          <CVPreview data={cvData} customisation={customisation} />
+        )}
       </div>
     </div>
   );

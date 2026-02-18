@@ -58,6 +58,29 @@ RULES:
 - Return ONLY valid JSON. No markdown, no explanation.`;
 
       userPrompt = JSON.stringify({ cv: cvData, jobDescription });
+    } else if (action === "cover-letter") {
+      systemPrompt = `You are a professional cover letter writer specialising in the music industry and technology sector.
+
+TASK: Write a compelling, ATS-optimised cover letter body (maximum 500 words) based on the candidate's CV data and the job description provided.
+
+LANGUAGE RULES:
+- Use British English spelling throughout (e.g. "organised", "centre", "programme", "recognised", "colour", "specialised").
+- Never use em dashes (—) or en dashes (–). Use commas, full stops, semicolons, or "to" for ranges.
+- Avoid generic AI filler: "leveraged", "utilised", "spearheaded", "synergised", "cutting-edge", "state-of-the-art", "passionate about", "results-driven", "dynamic".
+- Write in direct, clear, professional language.
+- Use active voice. Be specific and quantitative where possible.
+- Use industry-appropriate terminology.
+
+STRUCTURE:
+- 3 to 4 paragraphs maximum.
+- Opening paragraph: state the role you're applying for and a compelling hook.
+- Middle paragraphs: connect CV experience to job requirements using specific examples and metrics.
+- Closing paragraph: express enthusiasm and request for interview.
+- Do NOT include the greeting (Dear...) or sign-off (Yours sincerely) — only the body paragraphs.
+
+Return ONLY the plain text body. No JSON, no markdown, no explanation.`;
+
+      userPrompt = JSON.stringify({ cv: cvData, jobDescription });
     } else if (action === "parse") {
       systemPrompt = `You are a CV parser. Extract structured data from the raw CV text provided.
 
@@ -87,6 +110,8 @@ RULES:
 - Generate unique string IDs for each experience and education entry.
 - If information is not found, leave the field as an empty string or empty array.
 - Return ONLY valid JSON. No markdown, no explanation.`;
+
+      userPrompt = rawText || "";
 
       userPrompt = rawText || "";
     } else {
@@ -134,6 +159,13 @@ RULES:
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
+
+    // Cover letter returns plain text, not JSON
+    if (action === "cover-letter") {
+      return new Response(JSON.stringify({ body: content.trim() }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Parse the JSON from the response, stripping markdown fences if present
     let parsed;
