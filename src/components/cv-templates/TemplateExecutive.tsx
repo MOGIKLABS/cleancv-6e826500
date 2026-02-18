@@ -54,7 +54,7 @@ const TemplateExecutive = ({ data, customisation: c }: Props) => {
             <h2 className="text-[10px] uppercase tracking-[0.15em] font-semibold mb-1 pb-0.5" style={{ color: `hsl(${c.primaryColour})`, fontFamily: c.headingFont, borderBottom: `1px solid hsl(${c.primaryColour} / 0.2)` }}>Education</h2>
             {education.map(edu => (
               <div key={edu.id} className="mb-1.5">
-                <p className="text-[9px] font-semibold">{edu.degree} {edu.field}</p>
+                <p className="text-[9px] font-semibold">{edu.degree} {edu.field}{edu.grade ? ` — ${edu.grade}` : ""}</p>
                 <p className="text-[8px] opacity-50">{edu.institution} · {edu.startDate}–{edu.endDate}</p>
               </div>
             ))}

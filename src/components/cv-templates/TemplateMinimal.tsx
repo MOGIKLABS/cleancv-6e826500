@@ -41,7 +41,7 @@ const TemplateMinimal = ({ data, customisation: c }: Props) => {
           <h2 className="text-[9px] uppercase tracking-widest font-semibold mb-1" style={{ color: `hsl(${c.primaryColour})`, fontFamily: c.headingFont }}>Education</h2>
           {education.map(edu => (
             <div key={edu.id} className="mb-1">
-              <p className="text-[9px] font-semibold">{edu.degree} {edu.field}</p>
+              <p className="text-[9px] font-semibold">{edu.degree} {edu.field}{edu.grade ? ` — ${edu.grade}` : ""}</p>
               <p className="text-[8px] opacity-50">{edu.institution} · {edu.startDate}–{edu.endDate}</p>
             </div>
           ))}
