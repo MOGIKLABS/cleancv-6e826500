@@ -24,7 +24,7 @@ const Builder = () => {
     setPolishing(true);
     try {
       const { data, error } = await supabase.functions.invoke("cv-ai", {
-        body: { action: "polish", cvData },
+        body: { action: "polish", cvData }
       });
       if (error) throw error;
       setCvData(data as CVData);
@@ -46,7 +46,7 @@ const Builder = () => {
           </Button>
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            <span className="font-display text-base font-bold text-foreground">ResumeForge</span>
+            <span className="font-display text-base font-bold text-foreground">CleanCV</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -112,8 +112,8 @@ const Builder = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Builder;
