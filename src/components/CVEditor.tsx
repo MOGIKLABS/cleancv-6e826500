@@ -3,8 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench } from "lucide-react";
+import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench, RotateCcw } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
+import { defaultCVData } from "@/types/cv";
 
 interface CVEditorProps {
   data: CVData;
@@ -60,11 +61,17 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
         <SectionHeader icon={User} title="Personal Information" />
         <div className="grid gap-3">
           {/* Photo */}
-          <PhotoUpload
-            photo={data.personal.photo}
-            onPhotoChange={(url) => updatePersonal("photo", url)}
-            onPhotoRemove={() => updatePersonal("photo", "")}
-          />
+          <div className="flex items-center gap-3">
+            <PhotoUpload
+              photo={data.personal.photo}
+              onPhotoChange={(url) => updatePersonal("photo", url)}
+              onPhotoRemove={() => updatePersonal("photo", "")}
+            />
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onChange({ ...defaultCVData, personal: { ...defaultCVData.personal, photo: data.personal.photo } })}>
+              <RotateCcw className="h-3.5 w-3.5" />
+              Clear All
+            </Button>
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
