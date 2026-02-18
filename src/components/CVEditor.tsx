@@ -67,7 +67,7 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
               onPhotoChange={(url) => updatePersonal("photo", url)}
               onPhotoRemove={() => updatePersonal("photo", "")}
             />
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onChange({ ...defaultCVData, personal: { ...defaultCVData.personal, photo: data.personal.photo } })}>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onChange({ personal: { fullName: "", title: "", email: "", phone: "", location: "", summary: "", linkedin: "", github: "", photo: data.personal.photo }, experiences: [], education: [], skills: [] })}>
               <RotateCcw className="h-3.5 w-3.5" />
               Clear All
             </Button>
