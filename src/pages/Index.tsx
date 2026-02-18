@@ -48,8 +48,8 @@ const Index = () => {
           <h1 className="max-w-3xl font-display text-5xl font-light tracking-wide text-hero-foreground sm:text-6xl lg:text-7xl animate-fade-up leading-[1.1]">
             Clean, Simple CV Building
           </h1>
-          <p className="mt-8 max-w-lg text-base text-hero-foreground/60 animate-fade-up font-light leading-relaxed" style={{ animationDelay: "0.1s" }}>Create a clean, professional CV in minutes.  
-Real-time preview, modern templates, zero friction.
+          <p className="mt-8 max-w-lg text-base text-hero-foreground/60 animate-fade-up font-light leading-relaxed" style={{ animationDelay: "0.1s" }}>Real-time preview, modern templates, zero friction.
+
           </p>
           <div className="mt-12 flex gap-4 animate-fade-up" style={{ animationDelay: "0.2s" }}>
             <Button size="lg" onClick={() => navigate("/builder")} className="text-sm uppercase tracking-[0.2em] px-10 h-12 font-sans">
