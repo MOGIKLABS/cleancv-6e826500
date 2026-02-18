@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, ArrowLeft, Download, Sparkles, Loader2, Eye, PenLine, Save, Check } from "lucide-react";
+import { FileText, ArrowLeft, Download, Sparkles, Loader2, Eye, PenLine, Save, Check, FileDown, Maximize, Undo2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CVEditor from "@/components/CVEditor";
 import CVPreview from "@/components/CVPreview";
 import ATSChecker from "@/components/ATSChecker";
@@ -49,6 +50,8 @@ const Builder = () => {
   const [mobileView, setMobileView] = useState<"editor" | "preview">("editor");
   const [lastSaved, setLastSaved] = useState<Date | null>(draft?.savedAt ? new Date(draft.savedAt) : null);
   const [justSaved, setJustSaved] = useState(false);
+  const [onePage, setOnePage] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const saveDraft = useCallback(() => {
     const payload: DraftData = {
@@ -90,6 +93,58 @@ const Builder = () => {
       toast.error(e.message || "Polish failed. Please try again.");
     } finally {
       setPolishing(false);
+    }
+  };
+
+  const getPreviewHtml = (): string => {
+    const el = document.getElementById("cv-preview");
+    if (!el) return "";
+    return el.outerHTML;
+  };
+
+  const handleExportPdf = () => {
+    window.print();
+  };
+
+  const handleExportDocx = async () => {
+    setExporting(true);
+    try {
+      const htmlContent = getPreviewHtml();
+      if (!htmlContent) {
+        toast.error("No CV preview found. Switch to preview first.");
+        return;
+      }
+
+      // Build a full HTML document for conversion
+      const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        * { box-sizing: border-box; }
+        ul { margin: 4px 0; padding-left: 20px; }
+        li { margin-bottom: 2px; }
+      </style></head><body>${htmlContent}</body></html>`;
+
+      const { default: HTMLtoDOCX } = await import("html-to-docx");
+      const blob = await HTMLtoDOCX(fullHtml, null, {
+        table: { row: { cantSplit: true } },
+        footer: false,
+        header: false,
+      });
+
+      // Download
+      const url = URL.createObjectURL(blob as Blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${cvData.personal.fullName || "CV"}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("DOCX exported successfully.");
+    } catch (e: any) {
+      console.error("DOCX export error:", e);
+      toast.error("DOCX export failed. Try PDF instead.");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -146,7 +201,7 @@ const Builder = () => {
         {activeTab === "cover" ? (
           <CoverLetterPreview data={coverLetter} cvData={cvData} customisation={customisation} />
         ) : (
-          <CVPreview data={cvData} customisation={customisation} />
+          <CVPreview data={cvData} customisation={customisation} onePage={onePage} />
         )}
       </div>
     </div>
@@ -178,6 +233,19 @@ const Builder = () => {
               </span>
             )}
           </div>
+
+          {/* One Page toggle */}
+          <Button
+            size="sm"
+            variant={onePage ? "default" : "outline"}
+            className="gap-1.5"
+            onClick={() => setOnePage(!onePage)}
+          >
+            {onePage ? <Undo2 className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{onePage ? "Revert Original" : "One Page"}</span>
+          </Button>
+
+          {/* Polish */}
           <Button size="sm" variant="outline" className="gap-1.5 hidden sm:inline-flex" onClick={handlePolish} disabled={polishing}>
             {polishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
             <span className="hidden md:inline">{polishing ? "Polishing..." : "Polish CV"}</span>
@@ -185,10 +253,27 @@ const Builder = () => {
           <Button size="sm" variant="outline" className="gap-1.5 sm:hidden" onClick={handlePolish} disabled={polishing}>
             {polishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
           </Button>
-          <Button size="sm" className="gap-1.5" onClick={() => window.print()}>
-            <Download className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Export PDF</span>
-          </Button>
+
+          {/* Export CV dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="gap-1.5" disabled={exporting}>
+                {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
+                <span className="hidden sm:inline">Export CV</span>
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportPdf} className="gap-2 cursor-pointer">
+                <Download className="h-4 w-4" />
+                Export as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportDocx} className="gap-2 cursor-pointer">
+                <FileText className="h-4 w-4" />
+                Export as DOCX
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
