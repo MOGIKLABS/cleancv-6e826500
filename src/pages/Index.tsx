@@ -46,8 +46,7 @@ const Index = () => {
             Free &middot; No Sign-up Required
           </p>
           <h1 className="max-w-3xl font-display text-5xl font-light tracking-wide text-hero-foreground sm:text-6xl lg:text-7xl animate-fade-up leading-[1.1]">
-            Build a CV That Gets You{" "}
-            
+            Clean, Simple CV Building
           </h1>
           <p className="mt-8 max-w-lg text-base text-hero-foreground/60 animate-fade-up font-light leading-relaxed" style={{ animationDelay: "0.1s" }}>Create a clean, professional CV in minutes.  
 Real-time preview, modern templates, zero friction.
