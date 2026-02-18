@@ -89,7 +89,7 @@ Real-time preview, modern templates, zero friction.
           <h2 className="font-display text-4xl font-light tracking-wide text-hero-foreground">
 
           </h2>
-          <p className="mt-4 text-hero-foreground/50 text-sm uppercase tracking-[0.25em] font-sans">CLEANCV BUILDING. POWERED BY MOGIK LABS</p>
+          <p className="mt-4 text-hero-foreground/50 text-sm uppercase tracking-[0.25em] font-sans">CLEAN CV BUILDING. POWERED BY MOGIK LABS</p>
           <Button size="lg" onClick={() => navigate("/builder")} className="mt-10 h-12 px-10 text-sm uppercase tracking-[0.2em] font-sans">
             Create Your CV Now
           </Button>
