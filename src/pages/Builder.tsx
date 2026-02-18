@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, ArrowLeft, Download, Sparkles, Loader2, Eye, PenLine, Save, Check, FileDown, Maximize, Undo2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,71 +10,62 @@ import CVPreview from "@/components/CVPreview";
 import ATSChecker from "@/components/ATSChecker";
 import ApplicationLog from "@/components/ApplicationLog";
 import CustomisationPanel from "@/components/CustomisationPanel";
+import DraftsPanel from "@/components/DraftsPanel";
 
 import CoverLetterEditor from "@/components/CoverLetterEditor";
 import CoverLetterPreview from "@/components/CoverLetterPreview";
 import { CVData, CVCustomisation, CoverLetterData, defaultCVData, defaultCustomisation, defaultCoverLetterData } from "@/types/cv";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-const STORAGE_KEY = "cleancv-draft";
-const DRAFT_VERSION = 2; // bump to invalidate old drafts with demo data
-
-interface DraftData {
-  cvData: CVData;
-  customisation: CVCustomisation;
-  coverLetter: CoverLetterData;
-  jobDescription: string;
-  savedAt: string;
-  version?: number;
-}
-
-const loadDraft = (): DraftData | null => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as DraftData;
-    // Discard drafts from older versions (may contain demo data)
-    if (!parsed.version || parsed.version < DRAFT_VERSION) {
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-};
+import {
+  DraftData,
+  loadCurrentDraft,
+  saveCurrentDraft,
+  loadAllDrafts,
+  saveDraftToHistory,
+  exportDraftAsJSON,
+} from "@/lib/drafts";
 
 const Builder = () => {
   const navigate = useNavigate();
-  const draft = loadDraft();
 
-  const [cvData, setCvData] = useState<CVData>(draft?.cvData ?? defaultCVData);
-  const [customisation, setCustomisation] = useState<CVCustomisation>(draft?.customisation ?? defaultCustomisation);
-  const [coverLetter, setCoverLetter] = useState<CoverLetterData>(draft?.coverLetter ?? defaultCoverLetterData);
-  const [jobDescription, setJobDescription] = useState(draft?.jobDescription ?? "");
+  // Lazy-init from localStorage
+  const [draftId, setDraftId] = useState<string>(() => {
+    const d = loadCurrentDraft();
+    return d?.id || crypto.randomUUID();
+  });
+  const [cvData, setCvData] = useState<CVData>(() => loadCurrentDraft()?.cvData ?? { ...defaultCVData });
+  const [customisation, setCustomisation] = useState<CVCustomisation>(() => loadCurrentDraft()?.customisation ?? { ...defaultCustomisation });
+  const [coverLetter, setCoverLetter] = useState<CoverLetterData>(() => loadCurrentDraft()?.coverLetter ?? { ...defaultCoverLetterData });
+  const [jobDescription, setJobDescription] = useState(() => loadCurrentDraft()?.jobDescription ?? "");
   const [activeTab, setActiveTab] = useState("editor");
   const [polishing, setPolishing] = useState(false);
   const [mobileView, setMobileView] = useState<"editor" | "preview">("editor");
-  const [lastSaved, setLastSaved] = useState<Date | null>(draft?.savedAt ? new Date(draft.savedAt) : null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(() => {
+    const d = loadCurrentDraft();
+    return d?.savedAt ? new Date(d.savedAt) : null;
+  });
   const [justSaved, setJustSaved] = useState(false);
   const [onePage, setOnePage] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [drafts, setDrafts] = useState<DraftData[]>(() => loadAllDrafts());
 
   const saveDraft = useCallback(() => {
-    const payload: DraftData = {
+    const saved = saveCurrentDraft({
+      id: draftId,
+      label: cvData.personal.fullName || "Untitled Draft",
       cvData,
       customisation,
       coverLetter,
       jobDescription,
-      savedAt: new Date().toISOString(),
-      version: DRAFT_VERSION,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    });
+    // Also save to history
+    const updated = saveDraftToHistory(saved);
+    setDrafts(updated);
     setLastSaved(new Date());
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 2000);
-  }, [cvData, customisation, coverLetter, jobDescription]);
+  }, [draftId, cvData, customisation, coverLetter, jobDescription]);
 
   // Auto-save every 30 seconds
   useEffect(() => {
@@ -88,6 +79,24 @@ const Builder = () => {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [saveDraft]);
+
+  const loadDraft = (draft: DraftData) => {
+    setDraftId(draft.id);
+    setCvData(draft.cvData);
+    setCustomisation(draft.customisation);
+    setCoverLetter(draft.coverLetter);
+    setJobDescription(draft.jobDescription);
+    // Also set as current
+    saveCurrentDraft({ ...draft });
+    setLastSaved(new Date(draft.savedAt));
+    toast.success(`Loaded draft: ${draft.label}`);
+  };
+
+  const handleImportDraft = (draft: DraftData) => {
+    const updated = saveDraftToHistory(draft);
+    setDrafts(updated);
+    loadDraft(draft);
+  };
 
   const handlePolish = async () => {
     setPolishing(true);
@@ -124,7 +133,6 @@ const Builder = () => {
         return;
       }
 
-      // Build a full HTML document for conversion
       const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
         * { box-sizing: border-box; }
@@ -139,7 +147,6 @@ const Builder = () => {
         header: false,
       });
 
-      // Download
       const url = URL.createObjectURL(blob as Blob);
       const a = document.createElement("a");
       a.href = url;
@@ -165,6 +172,7 @@ const Builder = () => {
           <TabsTrigger value="cover" className="text-xs">Cover Letter</TabsTrigger>
           <TabsTrigger value="style" className="text-xs">Style</TabsTrigger>
           <TabsTrigger value="ats" className="text-xs">ATS</TabsTrigger>
+          <TabsTrigger value="drafts" className="text-xs">Drafts</TabsTrigger>
           <TabsTrigger value="log" className="text-xs">Apps</TabsTrigger>
         </TabsList>
       </div>
@@ -186,6 +194,17 @@ const Builder = () => {
       <TabsContent value="ats" className="flex-1 overflow-hidden mt-0">
         <ScrollArea className="h-full">
           <ATSChecker cvData={cvData} jobDescription={jobDescription} onJobDescriptionChange={setJobDescription} />
+        </ScrollArea>
+      </TabsContent>
+      <TabsContent value="drafts" className="flex-1 overflow-hidden mt-0">
+        <ScrollArea className="h-full">
+          <DraftsPanel
+            drafts={drafts}
+            currentDraftId={draftId}
+            onLoad={loadDraft}
+            onDraftsChange={setDrafts}
+            onImport={handleImportDraft}
+          />
         </ScrollArea>
       </TabsContent>
       <TabsContent value="log" className="flex-1 overflow-hidden mt-0">
