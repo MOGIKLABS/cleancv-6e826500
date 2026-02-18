@@ -24,7 +24,7 @@ interface CVEditorProps {
 const SectionHeader = ({ icon: Icon, title }: { icon: React.ElementType; title: string }) => (
   <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border">
     <Icon className="h-4 w-4 text-primary" />
-    <h2 className="font-display text-lg font-semibold text-foreground">{title}</h2>
+    <h2 className="font-display text-lg font-semibold text-foreground underline underline-offset-4">{title}</h2>
   </div>
 );
 
@@ -395,12 +395,25 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
       <section>
         <SectionHeader icon={Wrench} title="Skills" />
         <div>
-          <Label className="text-xs text-muted-foreground mb-2 block">Type a skill and press Enter or comma to add</Label>
+          <Label className="text-xs text-muted-foreground mb-2 block">Type a skill and press Enter or comma to add · drag to reorder</Label>
           <div className="flex flex-wrap gap-1.5 p-2 rounded-md border border-input bg-background min-h-[42px] items-center cursor-text" onClick={() => document.getElementById("skill-input")?.focus()}>
-            {data.skills.map((skill) => (
+            {data.skills.map((skill, index) => (
               <span
                 key={skill}
-                className="inline-flex items-center gap-1 rounded-md bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium"
+                draggable
+                onDragStart={(e) => { e.dataTransfer.setData("text/plain", String(index)); e.dataTransfer.effectAllowed = "move"; }}
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const fromIndex = Number(e.dataTransfer.getData("text/plain"));
+                  const toIndex = index;
+                  if (fromIndex === toIndex) return;
+                  const reordered = [...data.skills];
+                  const [moved] = reordered.splice(fromIndex, 1);
+                  reordered.splice(toIndex, 0, moved);
+                  onChange({ ...data, skills: reordered });
+                }}
+                className="inline-flex items-center gap-1 rounded-md bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium cursor-grab active:cursor-grabbing select-none"
               >
                 {skill}
                 <button
