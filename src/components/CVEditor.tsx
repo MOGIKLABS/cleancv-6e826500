@@ -1,15 +1,17 @@
-import { useState, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, useRef } from "react";
 import { CVData, Experience, Education } from "@/types/cv";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench, RotateCcw, Mail, Smartphone, MapPin, Linkedin, Github, ChevronUp, ChevronDown, X } from "lucide-react";
+import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench, RotateCcw, Mail, Smartphone, MapPin, Linkedin, Github, ChevronUp, ChevronDown, X, Upload, Loader2 } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
 import { defaultCVData } from "@/types/cv";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import BulletTextarea from "@/components/BulletTextarea";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface CVEditorProps {
   data: CVData;
@@ -25,6 +27,29 @@ const SectionHeader = ({ icon: Icon, title }: { icon: React.ElementType; title: 
 
 const CVEditor = ({ data, onChange }: CVEditorProps) => {
   const [skillInput, setSkillInput] = useState("");
+  const [importing, setImporting] = useState(false);
+  const importRef = useRef<HTMLInputElement>(null);
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("File must be under 5 MB."); return; }
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const { data: parsed, error } = await supabase.functions.invoke("cv-ai", {
+        body: { action: "parse", rawText: text, fileName: file.name },
+      });
+      if (error) throw error;
+      onChange(parsed as CVData);
+      toast.success("CV imported — review and edit as needed.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to parse CV.");
+    } finally {
+      setImporting(false);
+      if (importRef.current) importRef.current.value = "";
+    }
+  };
 
   const updatePersonal = (field: string, value: string) => {
     onChange({ ...data, personal: { ...data.personal, [field]: value } });
@@ -132,16 +157,21 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
       <section>
         <SectionHeader icon={User} title="Personal Information" />
         <div className="grid gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <PhotoUpload
               photo={data.personal.photo}
               onPhotoChange={(url) => updatePersonal("photo", url)}
               onPhotoRemove={() => updatePersonal("photo", "")}
             />
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => importRef.current?.click()} disabled={importing}>
+              {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+              {importing ? "Importing..." : "Import CV"}
+            </Button>
             <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onChange({ personal: { fullName: "", title: "", email: "", phone: "", location: "", summary: "", linkedin: "", github: "", photo: data.personal.photo }, experiences: [], education: [], skills: [] })}>
               <RotateCcw className="h-3.5 w-3.5" />
               Clear All
             </Button>
+            <input ref={importRef} type="file" accept=".txt,.md,.text,.rtf" className="hidden" onChange={handleImport} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">

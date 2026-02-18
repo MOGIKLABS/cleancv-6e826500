@@ -10,7 +10,7 @@ import CVPreview from "@/components/CVPreview";
 import ATSChecker from "@/components/ATSChecker";
 import ApplicationLog from "@/components/ApplicationLog";
 import CustomisationPanel from "@/components/CustomisationPanel";
-import CVUpload from "@/components/CVUpload";
+
 import CoverLetterEditor from "@/components/CoverLetterEditor";
 import CoverLetterPreview from "@/components/CoverLetterPreview";
 import { CVData, CVCustomisation, CoverLetterData, defaultCVData, defaultCustomisation, defaultCoverLetterData } from "@/types/cv";
@@ -155,7 +155,6 @@ const Builder = () => {
           <TabsTrigger value="editor" className="text-xs">Editor</TabsTrigger>
           <TabsTrigger value="cover" className="text-xs">Cover Letter</TabsTrigger>
           <TabsTrigger value="style" className="text-xs">Style</TabsTrigger>
-          <TabsTrigger value="upload" className="text-xs">Import</TabsTrigger>
           <TabsTrigger value="ats" className="text-xs">ATS</TabsTrigger>
           <TabsTrigger value="log" className="text-xs">Apps</TabsTrigger>
         </TabsList>
@@ -173,13 +172,6 @@ const Builder = () => {
       <TabsContent value="style" className="flex-1 overflow-hidden mt-0">
         <ScrollArea className="h-full">
           <CustomisationPanel value={customisation} onChange={setCustomisation} />
-        </ScrollArea>
-      </TabsContent>
-      <TabsContent value="upload" className="flex-1 overflow-hidden mt-0">
-        <ScrollArea className="h-full">
-          <div className="p-4 sm:p-6">
-            <CVUpload onParsed={setCvData} />
-          </div>
         </ScrollArea>
       </TabsContent>
       <TabsContent value="ats" className="flex-1 overflow-hidden mt-0">
