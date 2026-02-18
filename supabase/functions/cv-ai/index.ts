@@ -112,8 +112,6 @@ RULES:
 - Return ONLY valid JSON. No markdown, no explanation.`;
 
       userPrompt = rawText || "";
-
-      userPrompt = rawText || "";
     } else {
       return new Response(JSON.stringify({ error: "Invalid action" }), {
         status: 400,

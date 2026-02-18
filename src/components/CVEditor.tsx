@@ -4,13 +4,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench, RotateCcw, Mail, Smartphone, MapPin, Linkedin, Github, ChevronUp, ChevronDown, X, Upload, Loader2, FolderOpen } from "lucide-react";
+import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench, RotateCcw, Mail, Smartphone, MapPin, Linkedin, Github, ChevronUp, ChevronDown, X, Upload, Loader2 } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
 import { defaultCVData } from "@/types/cv";
 import MonthYearPicker from "@/components/MonthYearPicker";
 import BulletTextarea from "@/components/BulletTextarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import * as pdfjsLib from "pdfjs-dist";
+import mammoth from "mammoth";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 interface CVEditorProps {
   data: CVData;
@@ -46,13 +50,58 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
   };
 
 
+  const extractTextFromPdf = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = (textContent.items as any[]).map((item) => item.str).join(" ");
+      fullText += pageText + "\n";
+    }
+    return fullText;
+  };
+
+  const extractTextFromDocx = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  };
+
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error("File must be under 5 MB."); return; }
-    const text = await file.text();
-    await parseWithAI(text, file.name);
-    if (importRef.current) importRef.current.value = "";
+    if (file.size > 10 * 1024 * 1024) { toast.error("File must be under 10 MB."); return; }
+
+    toast.info(`"${file.name}" received — extracting content...`);
+
+    try {
+      let text = "";
+      if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+        text = await extractTextFromPdf(file);
+      } else if (
+        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.name.endsWith(".docx")
+      ) {
+        text = await extractTextFromDocx(file);
+      } else {
+        toast.error("Please upload a .pdf or .docx file.");
+        return;
+      }
+
+      if (!text.trim()) {
+        toast.error("Could not extract any text from this file. It may be a scanned image.");
+        return;
+      }
+
+      await parseWithAI(text, file.name);
+    } catch (err: any) {
+      console.error("Import error:", err);
+      toast.error("Failed to read file. Please try a different format.");
+    } finally {
+      if (importRef.current) importRef.current.value = "";
+    }
   };
 
   const updatePersonal = (field: string, value: string) => {
@@ -175,7 +224,7 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
               <RotateCcw className="h-3.5 w-3.5" />
               Clear All
             </Button>
-            <input ref={importRef} type="file" accept=".txt,.md,.text,.rtf" className="hidden" onChange={handleImport} />
+            <input ref={importRef} type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="hidden" onChange={handleImport} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
