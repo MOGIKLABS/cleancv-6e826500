@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { DraftData, deleteDraftFromHistory, exportDraftAsJSON, importDraftFromJSON } from "@/lib/drafts";
 import { Button } from "@/components/ui/button";
 import { Trash2, Download, Upload, FolderOpen } from "lucide-react";
@@ -10,10 +10,13 @@ interface DraftsPanelProps {
   onLoad: (draft: DraftData) => void;
   onDraftsChange: (drafts: DraftData[]) => void;
   onImport: (draft: DraftData) => void;
+  onRename?: (id: string, newLabel: string) => void;
 }
 
-const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport }: DraftsPanelProps) => {
+const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport, onRename }: DraftsPanelProps) => {
   const importRef = useRef<HTMLInputElement>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
 
   const handleDelete = (id: string) => {
     const updated = deleteDraftFromHistory(id);
@@ -33,6 +36,18 @@ const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport 
     } finally {
       if (importRef.current) importRef.current.value = "";
     }
+  };
+
+  const startEditing = (draft: DraftData) => {
+    setEditingId(draft.id);
+    setEditValue(draft.label || "Untitled Draft");
+  };
+
+  const commitRename = () => {
+    if (editingId && editValue.trim()) {
+      onRename?.(editingId, editValue.trim());
+    }
+    setEditingId(null);
   };
 
   const formatDate = (iso: string) => {
@@ -70,12 +85,30 @@ const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport 
               }`}
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {draft.label || "Untitled Draft"}
-                  {draft.id === currentDraftId && (
-                    <span className="ml-2 text-[10px] text-primary font-normal">(current)</span>
-                  )}
-                </p>
+                {editingId === draft.id ? (
+                  <input
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={commitRename}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitRename();
+                      if (e.key === "Escape") setEditingId(null);
+                    }}
+                    className="text-sm font-medium text-foreground bg-transparent border-b border-primary outline-none w-full"
+                  />
+                ) : (
+                  <p
+                    className="text-sm font-medium text-foreground truncate cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => startEditing(draft)}
+                    title="Click to rename"
+                  >
+                    {draft.label || "Untitled Draft"}
+                    {draft.id === currentDraftId && (
+                      <span className="ml-2 text-[10px] text-primary font-normal">(current)</span>
+                    )}
+                  </p>
+                )}
                 <p className="text-[11px] text-muted-foreground">{formatDate(draft.savedAt)}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">

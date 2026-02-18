@@ -23,6 +23,7 @@ import {
   saveCurrentDraft,
   loadAllDrafts,
   saveDraftToHistory,
+  renameDraftInHistory,
   exportDraftAsJSON,
 } from "@/lib/drafts";
 
@@ -204,6 +205,10 @@ const Builder = () => {
             onLoad={loadDraft}
             onDraftsChange={setDrafts}
             onImport={handleImportDraft}
+            onRename={(id, newLabel) => {
+              const updated = renameDraftInHistory(id, newLabel);
+              setDrafts(updated);
+            }}
           />
         </ScrollArea>
       </TabsContent>
