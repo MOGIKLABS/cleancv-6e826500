@@ -1,5 +1,5 @@
 import { CVData, CVCustomisation } from "@/types/cv";
-import { Mail, Phone, MapPin, Linkedin, Github } from "lucide-react";
+import { Mail, Smartphone, MapPin, Linkedin, Github } from "lucide-react";
 
 interface Props { data: CVData; customisation: CVCustomisation; }
 
@@ -23,11 +23,11 @@ const TemplateExecutive = ({ data, customisation: c }: Props) => {
             </div>
           </div>
           <div className="text-right text-[8px] opacity-60 space-y-0.5 pt-1">
-            <p className="flex items-center justify-end gap-1"><Mail className="h-2.5 w-2.5" />{personal.email}</p>
-            <p className="flex items-center justify-end gap-1"><Phone className="h-2.5 w-2.5" />{personal.phone}</p>
+            <p className="flex items-center justify-end gap-1"><Mail className="h-2.5 w-2.5" /><a href={`mailto:${personal.email}`} className="underline">{personal.email}</a></p>
+            <p className="flex items-center justify-end gap-1"><Smartphone className="h-2.5 w-2.5" />{personal.phone}</p>
             <p className="flex items-center justify-end gap-1"><MapPin className="h-2.5 w-2.5" />{personal.location}</p>
-            {personal.linkedin && <p className="flex items-center justify-end gap-1"><Linkedin className="h-2.5 w-2.5" />{personal.linkedin}</p>}
-            {personal.github && <p className="flex items-center justify-end gap-1"><Github className="h-2.5 w-2.5" />{personal.github}</p>}
+            {personal.linkedin && <p className="flex items-center justify-end gap-1"><Linkedin className="h-2.5 w-2.5" /><a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" className="underline">{personal.linkedin}</a></p>}
+            {personal.github && <p className="flex items-center justify-end gap-1"><Github className="h-2.5 w-2.5" /><a href={personal.github.startsWith("http") ? personal.github : `https://${personal.github}`} target="_blank" rel="noopener noreferrer" className="underline">{personal.github}</a></p>}
           </div>
         </div>
 
