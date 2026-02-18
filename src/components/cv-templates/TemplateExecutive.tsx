@@ -1,5 +1,6 @@
 import { CVData, CVCustomisation } from "@/types/cv";
 import { Mail, Smartphone, MapPin, Linkedin, Github } from "lucide-react";
+import { renderDescription } from "./renderDescription";
 
 interface Props { data: CVData; customisation: CVCustomisation; }
 
@@ -44,7 +45,7 @@ const TemplateExecutive = ({ data, customisation: c }: Props) => {
               <p className="text-[10px]"><span className="font-semibold">{exp.position}</span> · {exp.company}</p>
               <span className="text-[8px] opacity-50">{exp.startDate} — {exp.endDate}</span>
             </div>
-            <p className="text-[9px] opacity-70 mt-0.5 leading-relaxed">{exp.description}</p>
+            {renderDescription(exp.description, "text-[9px] opacity-70 mt-0.5 leading-relaxed")}
           </div>
         ))}
 

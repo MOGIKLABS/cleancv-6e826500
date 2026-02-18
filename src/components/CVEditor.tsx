@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench, RotateCcw, Mail, Smartphone, MapPin, Linkedin, Github } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
 import { defaultCVData } from "@/types/cv";
+import MonthYearPicker from "@/components/MonthYearPicker";
+import BulletTextarea from "@/components/BulletTextarea";
 
 interface CVEditorProps {
   data: CVData;
@@ -136,17 +138,20 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-muted-foreground">Start</Label>
-                  <Input value={exp.startDate} onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)} placeholder="2021" />
+                  <MonthYearPicker value={exp.startDate} onChange={(v) => updateExperience(exp.id, "startDate", v)} placeholder="Jan 2021" />
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">End</Label>
-                  <Input value={exp.endDate} onChange={(e) => updateExperience(exp.id, "endDate", e.target.value)} placeholder="Present" />
+                  <MonthYearPicker value={exp.endDate} onChange={(v) => updateExperience(exp.id, "endDate", v)} placeholder="Present" />
                 </div>
               </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Description</Label>
-                <Textarea value={exp.description} onChange={(e) => updateExperience(exp.id, "description", e.target.value)} placeholder="Key achievements and responsibilities..." rows={2} />
-              </div>
+              <BulletTextarea
+                label="Description"
+                value={exp.description}
+                onChange={(v) => updateExperience(exp.id, "description", v)}
+                placeholder="Key achievements and responsibilities..."
+                rows={3}
+              />
             </div>
           ))}
           <Button variant="outline" onClick={addExperience} className="w-full border-dashed">
@@ -181,11 +186,11 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-muted-foreground">Start</Label>
-                  <Input value={edu.startDate} onChange={(e) => updateEducation(edu.id, "startDate", e.target.value)} placeholder="2014" />
+                  <MonthYearPicker value={edu.startDate} onChange={(v) => updateEducation(edu.id, "startDate", v)} placeholder="Sep 2014" />
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">End</Label>
-                  <Input value={edu.endDate} onChange={(e) => updateEducation(edu.id, "endDate", e.target.value)} placeholder="2018" />
+                  <MonthYearPicker value={edu.endDate} onChange={(v) => updateEducation(edu.id, "endDate", v)} placeholder="Jun 2018" />
                 </div>
               </div>
             </div>
