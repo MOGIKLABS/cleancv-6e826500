@@ -43,12 +43,12 @@ export interface CVCustomisation {
 }
 
 export const defaultCustomisation: CVCustomisation = {
-  template: "classic",
-  primaryColour: "174 72% 40%",
-  sidebarColour: "220 55% 18%",
-  textColour: "220 30% 12%",
+  template: "minimal",
+  primaryColour: "0 0% 0%",
+  sidebarColour: "0 0% 96%",
+  textColour: "0 0% 10%",
   fontFamily: "Inter",
-  headingFont: "Space Grotesk",
+  headingFont: "Cormorant Garamond",
   fontSize: 11,
   headingBold: true,
   bodyItalic: false,
