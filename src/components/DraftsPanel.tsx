@@ -48,7 +48,7 @@ const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport 
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => importRef.current?.click()}>
             <Upload className="h-3.5 w-3.5" />
-            Import JSON
+            Restore from Backup
           </Button>
           <input ref={importRef} type="file" accept=".json,application/json" className="hidden" onChange={handleImportFile} />
         </div>
@@ -84,7 +84,7 @@ const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport 
                     Load
                   </Button>
                 )}
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => exportDraftAsJSON(draft)} title="Export as JSON">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => exportDraftAsJSON(draft)} title="Download Backup">
                   <Download className="h-3.5 w-3.5" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(draft.id)} title="Delete draft">
