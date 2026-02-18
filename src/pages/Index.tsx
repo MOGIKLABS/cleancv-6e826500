@@ -3,22 +3,22 @@ import { FileText, Zap, Sparkles, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const features = [
-  {
-    icon: Zap,
-    title: "Instant Builder",
-    description: "Build your professional CV in minutes with our intuitive editor and live preview.",
-  },
-  {
-    icon: Sparkles,
-    title: "Modern Templates",
-    description: "Stand out with clean, ATS-friendly designs loved by top tech companies.",
-  },
-  {
-    icon: Shield,
-    title: "Privacy First",
-    description: "Your data stays in your browser. No account required, no tracking.",
-  },
-];
+{
+  icon: Zap,
+  title: "Instant Builder",
+  description: "Build your professional CV in minutes with our intuitive editor and live preview."
+},
+{
+  icon: Sparkles,
+  title: "Modern Templates",
+  description: "Stand out with clean, ATS-friendly designs loved by top tech companies."
+},
+{
+  icon: Shield,
+  title: "Privacy First",
+  description: "Your data stays in your browser. No account required, no tracking."
+}];
+
 
 const Index = () => {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ const Index = () => {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-foreground" />
-            <span className="font-display text-xl font-light tracking-[0.08em] text-foreground">ResumeForge</span>
+            <span className="font-display text-xl font-light tracking-[0.08em] text-foreground">CleanCV</span>
           </div>
           <Button variant="outline" onClick={() => navigate("/builder")} size="sm" className="uppercase tracking-[0.15em] text-xs font-sans">
             Build Your CV
@@ -49,8 +49,8 @@ const Index = () => {
             Build a CV That Gets You{" "}
             <em className="italic">Hired</em>
           </h1>
-          <p className="mt-8 max-w-lg text-base text-hero-foreground/60 animate-fade-up font-light leading-relaxed" style={{ animationDelay: "0.1s" }}>
-            Create a stunning, professional résumé in minutes. Real-time preview, modern templates, zero friction.
+          <p className="mt-8 max-w-lg text-base text-hero-foreground/60 animate-fade-up font-light leading-relaxed" style={{ animationDelay: "0.1s" }}>Create a clean, professional CV in minutes. 
+Real-time preview, modern templates, zero friction.
           </p>
           <div className="mt-12 flex gap-4 animate-fade-up" style={{ animationDelay: "0.2s" }}>
             <Button size="lg" onClick={() => navigate("/builder")} className="text-sm uppercase tracking-[0.2em] px-10 h-12 font-sans">
@@ -63,23 +63,23 @@ const Index = () => {
       {/* Features */}
       <section className="container py-28">
         <div className="text-center mb-20">
-          <h2 className="font-display text-4xl font-light tracking-wide text-foreground">Why ResumeForge?</h2>
+          <h2 className="font-display text-4xl font-light tracking-wide text-foreground">CleanCV</h2>
           <p className="mt-4 text-muted-foreground text-sm uppercase tracking-[0.25em] font-sans">Everything you need, nothing you don't.</p>
         </div>
         <div className="grid gap-8 md:grid-cols-3">
-          {features.map((f, i) => (
-            <div
-              key={f.title}
-              className="group border border-border bg-card p-10 transition-all hover:border-foreground/20"
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
+          {features.map((f, i) =>
+          <div
+            key={f.title}
+            className="group border border-border bg-card p-10 transition-all hover:border-foreground/20"
+            style={{ animationDelay: `${i * 0.1}s` }}>
+
               <div className="mb-5 inline-flex h-10 w-10 items-center justify-center border border-border text-foreground/60 transition-colors group-hover:bg-foreground group-hover:text-background">
                 <f.icon className="h-4 w-4" />
               </div>
               <h3 className="font-display text-2xl font-light text-card-foreground tracking-wide">{f.title}</h3>
               <p className="mt-3 text-muted-foreground leading-relaxed text-sm">{f.description}</p>
             </div>
-          ))}
+          )}
         </div>
       </section>
 
@@ -87,9 +87,9 @@ const Index = () => {
       <section className="hero-gradient">
         <div className="container py-24 text-center">
           <h2 className="font-display text-4xl font-light tracking-wide text-hero-foreground">
-            Ready to land your dream role?
+
           </h2>
-          <p className="mt-4 text-hero-foreground/50 text-sm uppercase tracking-[0.25em] font-sans">Join thousands of professionals who trust ResumeForge.</p>
+          <p className="mt-4 text-hero-foreground/50 text-sm uppercase tracking-[0.25em] font-sans">CLEANCV BUILDING. POWERED BY MOGIK LABS</p>
           <Button size="lg" onClick={() => navigate("/builder")} className="mt-10 h-12 px-10 text-sm uppercase tracking-[0.2em] font-sans">
             Create Your CV Now
           </Button>
@@ -101,13 +101,13 @@ const Index = () => {
         <div className="container py-10 flex items-center justify-between text-xs text-muted-foreground uppercase tracking-[0.15em] font-sans">
           <div className="flex items-center gap-2">
             <FileText className="h-3.5 w-3.5" />
-            <span className="font-display text-sm normal-case tracking-[0.08em] text-foreground">ResumeForge</span>
+            <span className="font-display text-sm normal-case tracking-[0.08em] text-foreground">CLEANCV</span>
           </div>
-          <span>© 2026 ResumeForge</span>
+          <span>© 2026 MOGIK LABS</span>
         </div>
       </footer>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Index;
