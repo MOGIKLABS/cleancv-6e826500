@@ -109,6 +109,14 @@ export function renameDraftInHistory(id: string, newLabel: string): DraftData[] 
   const draft = all.find((d) => d.id === id);
   if (draft) draft.label = newLabel;
   localStorage.setItem(DRAFTS_KEY, JSON.stringify(all));
+
+  // Also update the current draft if it matches
+  const current = loadCurrentDraft();
+  if (current && current.id === id) {
+    current.label = newLabel;
+    localStorage.setItem(CURRENT_KEY, JSON.stringify(current));
+  }
+
   return all;
 }
 

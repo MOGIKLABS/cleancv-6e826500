@@ -52,9 +52,14 @@ const Builder = () => {
   const [drafts, setDrafts] = useState<DraftData[]>(() => loadAllDrafts());
 
   const saveDraft = useCallback(() => {
+    // Preserve existing custom label if one was set via rename
+    const existingDrafts = loadAllDrafts();
+    const existingDraft = existingDrafts.find(d => d.id === draftId);
+    const currentLabel = existingDraft?.label || cvData.personal.fullName || "Untitled Draft";
+
     const saved = saveCurrentDraft({
       id: draftId,
-      label: cvData.personal.fullName || "Untitled Draft",
+      label: currentLabel,
       cvData,
       customisation,
       coverLetter,

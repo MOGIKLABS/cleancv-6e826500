@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { DraftData, deleteDraftFromHistory, exportDraftAsJSON, importDraftFromJSON } from "@/lib/drafts";
 import { Button } from "@/components/ui/button";
 import { Trash2, Download, Upload, FolderOpen } from "lucide-react";
@@ -89,7 +89,7 @@ const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport,
               <div className="min-w-0 flex-1">
                 {editingId === draft.id ? (
                   <input
-                    ref={(el) => el?.focus()}
+                    ref={useCallback((el: HTMLInputElement | null) => { if (el) requestAnimationFrame(() => el.focus()); }, [])}
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
                     onBlur={commitRename}
