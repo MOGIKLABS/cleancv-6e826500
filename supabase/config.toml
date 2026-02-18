@@ -1,0 +1,4 @@
+project_id = "kjnpkqdgvtztzhkxpgih"
+
+[functions.cv-ai]
+verify_jwt = false
