@@ -42,11 +42,11 @@ const Index = () => {
       <section className="relative overflow-hidden hero-gradient pt-16">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_50%_50%,hsl(0_0%_30%),transparent_70%)]" />
         <div className="relative container flex flex-col items-center justify-center py-32 text-center lg:py-44">
-          <p className="text-xs uppercase tracking-[0.35em] text-hero-foreground/50 mb-8 animate-fade-in font-sans">
-            Free &middot; No Sign-up Required
+          <p className="text-xs uppercase tracking-[0.35em] text-hero-foreground/50 mb-8 animate-fade-in font-sans">FREE · NO SIGN-UP ·DATA STORED LOCALLY      
+
           </p>
-          <h1 className="max-w-3xl font-display text-5xl font-light tracking-wide text-hero-foreground sm:text-6xl lg:text-7xl animate-fade-up leading-[1.1]">
-            Clean, Simple CV Building
+          <h1 className="max-w-3xl font-display text-5xl font-light tracking-wide text-hero-foreground sm:text-6xl lg:text-7xl animate-fade-up leading-[1.1]">Clean CV building
+
           </h1>
           <p className="mt-8 max-w-lg text-base text-hero-foreground/60 animate-fade-up font-light leading-relaxed" style={{ animationDelay: "0.1s" }}>Real-time preview, modern templates, zero friction.
 
