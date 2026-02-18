@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench } from "lucide-react";
+import PhotoUpload from "@/components/PhotoUpload";
 
 interface CVEditorProps {
   data: CVData;
@@ -23,22 +24,12 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
   };
 
   const addExperience = () => {
-    const newExp: Experience = {
-      id: Date.now().toString(),
-      company: "",
-      position: "",
-      startDate: "",
-      endDate: "",
-      description: "",
-    };
+    const newExp: Experience = { id: Date.now().toString(), company: "", position: "", startDate: "", endDate: "", description: "" };
     onChange({ ...data, experiences: [...data.experiences, newExp] });
   };
 
   const updateExperience = (id: string, field: string, value: string) => {
-    onChange({
-      ...data,
-      experiences: data.experiences.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
-    });
+    onChange({ ...data, experiences: data.experiences.map((e) => (e.id === id ? { ...e, [field]: value } : e)) });
   };
 
   const removeExperience = (id: string) => {
@@ -46,22 +37,12 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
   };
 
   const addEducation = () => {
-    const newEdu: Education = {
-      id: Date.now().toString(),
-      institution: "",
-      degree: "",
-      field: "",
-      startDate: "",
-      endDate: "",
-    };
+    const newEdu: Education = { id: Date.now().toString(), institution: "", degree: "", field: "", startDate: "", endDate: "" };
     onChange({ ...data, education: [...data.education, newEdu] });
   };
 
   const updateEducation = (id: string, field: string, value: string) => {
-    onChange({
-      ...data,
-      education: data.education.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
-    });
+    onChange({ ...data, education: data.education.map((e) => (e.id === id ? { ...e, [field]: value } : e)) });
   };
 
   const removeEducation = (id: string) => {
@@ -78,6 +59,13 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
       <section>
         <SectionHeader icon={User} title="Personal Information" />
         <div className="grid gap-3">
+          {/* Photo */}
+          <PhotoUpload
+            photo={data.personal.photo}
+            onPhotoChange={(url) => updatePersonal("photo", url)}
+            onPhotoRemove={() => updatePersonal("photo", "")}
+          />
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs text-muted-foreground">Full Name</Label>
@@ -102,6 +90,16 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
             <Label className="text-xs text-muted-foreground">Location</Label>
             <Input value={data.personal.location} onChange={(e) => updatePersonal("location", e.target.value)} placeholder="San Francisco, CA" />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground">LinkedIn</Label>
+              <Input value={data.personal.linkedin || ""} onChange={(e) => updatePersonal("linkedin", e.target.value)} placeholder="linkedin.com/in/username" />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">GitHub</Label>
+              <Input value={data.personal.github || ""} onChange={(e) => updatePersonal("github", e.target.value)} placeholder="github.com/username" />
+            </div>
+          </div>
           <div>
             <Label className="text-xs text-muted-foreground">Professional Summary</Label>
             <Textarea value={data.personal.summary} onChange={(e) => updatePersonal("summary", e.target.value)} placeholder="Brief professional summary..." rows={3} />
@@ -115,12 +113,7 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
         <div className="space-y-4">
           {data.experiences.map((exp) => (
             <div key={exp.id} className="rounded-lg border border-border bg-muted/30 p-4 space-y-3 relative group">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive transition-opacity"
-                onClick={() => removeExperience(exp.id)}
-              >
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive transition-opacity" onClick={() => removeExperience(exp.id)}>
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
               <div className="grid grid-cols-2 gap-3">
@@ -161,12 +154,7 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
         <div className="space-y-4">
           {data.education.map((edu) => (
             <div key={edu.id} className="rounded-lg border border-border bg-muted/30 p-4 space-y-3 relative group">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive transition-opacity"
-                onClick={() => removeEducation(edu.id)}
-              >
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive transition-opacity" onClick={() => removeEducation(edu.id)}>
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
               <div className="grid grid-cols-2 gap-3">
@@ -206,12 +194,7 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
         <SectionHeader icon={Wrench} title="Skills" />
         <div>
           <Label className="text-xs text-muted-foreground">Skills (comma separated)</Label>
-          <Textarea
-            value={data.skills.join(", ")}
-            onChange={(e) => updateSkills(e.target.value)}
-            placeholder="React, TypeScript, Node.js..."
-            rows={2}
-          />
+          <Textarea value={data.skills.join(", ")} onChange={(e) => updateSkills(e.target.value)} placeholder="React, TypeScript, Node.js..." rows={2} />
         </div>
       </section>
     </div>
