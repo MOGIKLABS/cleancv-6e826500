@@ -26,6 +26,7 @@ export interface Education {
   field: string;
   startDate: string;
   endDate: string;
+  inProgress?: boolean;
 }
 
 export interface CoverLetterData {
