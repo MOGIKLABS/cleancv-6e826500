@@ -1,20 +1,100 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const ALLOWED_ORIGINS = [
+  "https://cleancv.lovable.app",
+  "https://id-preview--51e4f04b-4aeb-490c-a1fb-d71253d70af5.lovable.app",
+  "http://localhost:8080",
+  "http://localhost:5173",
+];
 
 const ALLOWED_ACTIONS = ["polish", "ats", "cover-letter", "parse"];
-const MAX_BODY_SIZE = 100_000; // 100 KB total request body
+const MAX_BODY_SIZE = 100_000;
 const MAX_RAW_TEXT_SIZE = 50_000;
 const MAX_JOB_DESC_SIZE = 10_000;
+const RATE_LIMIT = 10; // max requests per window
+const RATE_WINDOW_MINUTES = 60;
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") || "";
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+function hashIP(ip: string): string {
+  // Simple hash to avoid storing raw IPs
+  let hash = 0;
+  for (let i = 0; i < ip.length; i++) {
+    const char = ip.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return "ip_" + Math.abs(hash).toString(36);
+}
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // ── Rate limiting ──
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || req.headers.get("cf-connecting-ip")
+      || "unknown";
+    const ipHash = hashIP(clientIP);
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Clean up old entries occasionally (1 in 20 chance)
+    if (Math.random() < 0.05) {
+      await supabaseAdmin.rpc("cleanup_rate_limits").catch(() => {});
+    }
+
+    const windowStart = new Date(Date.now() - RATE_WINDOW_MINUTES * 60 * 1000).toISOString();
+
+    const { data: rateLimitData } = await supabaseAdmin
+      .from("rate_limits")
+      .select("request_count")
+      .eq("ip_hash", ipHash)
+      .eq("function_name", "cv-ai")
+      .gte("window_start", windowStart);
+
+    const totalRequests = (rateLimitData || []).reduce((sum, r) => sum + r.request_count, 0);
+
+    if (totalRequests >= RATE_LIMIT) {
+      return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Record this request
+    const windowKey = new Date().toISOString().slice(0, 16); // per-minute bucket
+    const { error: upsertErr } = await supabaseAdmin
+      .from("rate_limits")
+      .upsert(
+        { ip_hash: ipHash, function_name: "cv-ai", window_start: windowKey, request_count: 1 },
+        { onConflict: "ip_hash,function_name,window_start" }
+      );
+
+    if (!upsertErr) {
+      // Increment if row already existed
+      await supabaseAdmin
+        .from("rate_limits")
+        .update({ request_count: totalRequests + 1 })
+        .eq("ip_hash", ipHash)
+        .eq("function_name", "cv-ai")
+        .eq("window_start", windowKey);
+    }
+
     // ── Input validation ──
     const rawBody = await req.text();
     if (rawBody.length > MAX_BODY_SIZE) {
@@ -44,14 +124,14 @@ serve(async (req) => {
     }
 
     if (rawText !== undefined && (typeof rawText !== "string" || rawText.length > MAX_RAW_TEXT_SIZE)) {
-      return new Response(JSON.stringify({ error: "rawText too large or invalid" }), {
+      return new Response(JSON.stringify({ error: "Input too large" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (jobDescription !== undefined && (typeof jobDescription !== "string" || jobDescription.length > MAX_JOB_DESC_SIZE)) {
-      return new Response(JSON.stringify({ error: "jobDescription too large or invalid" }), {
+      return new Response(JSON.stringify({ error: "Input too large" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -59,7 +139,7 @@ serve(async (req) => {
 
     // ── Build prompts ──
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) throw new Error("Missing configuration");
 
     let systemPrompt = "";
     let userPrompt = "";
@@ -179,15 +259,14 @@ RULES:
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please top up in Settings." }), {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please try again later." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const text = await response.text();
-      console.error("AI gateway error:", response.status, text);
-      return new Response(JSON.stringify({ error: "AI service error" }), {
-        status: 500,
+      console.error("AI gateway error", { status: response.status, action });
+      return new Response(JSON.stringify({ error: "AI service temporarily unavailable." }), {
+        status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -205,8 +284,8 @@ RULES:
     try {
       const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       parsed = JSON.parse(cleaned);
-    } catch (parseErr) {
-      console.error("Failed to parse AI response:", content, parseErr);
+    } catch {
+      console.error("AI response parse failure", { action });
       return new Response(JSON.stringify({ error: "Unable to process AI response. Please try again." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -217,7 +296,7 @@ RULES:
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("cv-ai error:", e);
+    console.error("cv-ai error", { message: e instanceof Error ? e.message : "unknown" });
     return new Response(JSON.stringify({ error: "An unexpected error occurred. Please try again." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
