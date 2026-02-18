@@ -8,13 +8,16 @@ import CVEditor from "@/components/CVEditor";
 import CVPreview from "@/components/CVPreview";
 import ATSChecker from "@/components/ATSChecker";
 import ApplicationLog from "@/components/ApplicationLog";
-import { CVData, defaultCVData } from "@/types/cv";
+import CustomisationPanel from "@/components/CustomisationPanel";
+import CVUpload from "@/components/CVUpload";
+import { CVData, CVCustomisation, defaultCVData, defaultCustomisation } from "@/types/cv";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Builder = () => {
   const navigate = useNavigate();
   const [cvData, setCvData] = useState<CVData>(defaultCVData);
+  const [customisation, setCustomisation] = useState<CVCustomisation>(defaultCustomisation);
   const [polishing, setPolishing] = useState(false);
 
   const handlePolish = async () => {
@@ -66,6 +69,8 @@ const Builder = () => {
             <div className="border-b border-border px-4 pt-2">
               <TabsList className="h-9">
                 <TabsTrigger value="editor" className="text-xs">Editor</TabsTrigger>
+                <TabsTrigger value="style" className="text-xs">Style</TabsTrigger>
+                <TabsTrigger value="upload" className="text-xs">Import</TabsTrigger>
                 <TabsTrigger value="ats" className="text-xs">ATS Check</TabsTrigger>
                 <TabsTrigger value="log" className="text-xs">Applications</TabsTrigger>
               </TabsList>
@@ -73,6 +78,18 @@ const Builder = () => {
             <TabsContent value="editor" className="flex-1 overflow-hidden mt-0">
               <ScrollArea className="h-full">
                 <CVEditor data={cvData} onChange={setCvData} />
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="style" className="flex-1 overflow-hidden mt-0">
+              <ScrollArea className="h-full">
+                <CustomisationPanel value={customisation} onChange={setCustomisation} />
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="upload" className="flex-1 overflow-hidden mt-0">
+              <ScrollArea className="h-full">
+                <div className="p-6">
+                  <CVUpload onParsed={setCvData} />
+                </div>
               </ScrollArea>
             </TabsContent>
             <TabsContent value="ats" className="flex-1 overflow-hidden mt-0">
@@ -91,7 +108,7 @@ const Builder = () => {
         {/* Preview */}
         <div className="w-1/2 bg-muted/50 overflow-auto">
           <div className="p-8 flex items-start justify-center min-h-full">
-            <CVPreview data={cvData} />
+            <CVPreview data={cvData} customisation={customisation} />
           </div>
         </div>
       </div>

@@ -10,7 +10,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, cvData, jobDescription } = await req.json();
+    const body = await req.json();
+    const { action, cvData, jobDescription, rawText, fileName } = body;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -57,6 +58,37 @@ RULES:
 - Return ONLY valid JSON. No markdown, no explanation.`;
 
       userPrompt = JSON.stringify({ cv: cvData, jobDescription });
+    } else if (action === "parse") {
+      systemPrompt = `You are a CV parser. Extract structured data from the raw CV text provided.
+
+Return a JSON object with this exact structure:
+{
+  "personal": {
+    "fullName": "",
+    "title": "",
+    "email": "",
+    "phone": "",
+    "location": "",
+    "summary": "",
+    "linkedin": "",
+    "github": ""
+  },
+  "experiences": [
+    { "id": "1", "company": "", "position": "", "startDate": "", "endDate": "", "description": "" }
+  ],
+  "education": [
+    { "id": "1", "institution": "", "degree": "", "field": "", "startDate": "", "endDate": "" }
+  ],
+  "skills": ["skill1", "skill2"]
+}
+
+RULES:
+- Extract as much information as possible from the text.
+- Generate unique string IDs for each experience and education entry.
+- If information is not found, leave the field as an empty string or empty array.
+- Return ONLY valid JSON. No markdown, no explanation.`;
+
+      userPrompt = rawText || "";
     } else {
       return new Response(JSON.stringify({ error: "Invalid action" }), {
         status: 400,
