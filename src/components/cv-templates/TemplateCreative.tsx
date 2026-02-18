@@ -1,5 +1,6 @@
 import { CVData, CVCustomisation } from "@/types/cv";
 import { Mail, Smartphone, MapPin, Linkedin, Github } from "lucide-react";
+import { renderDescription } from "./renderDescription";
 
 interface Props { data: CVData; customisation: CVCustomisation; }
 
@@ -50,7 +51,7 @@ const TemplateCreative = ({ data, customisation: c }: Props) => {
               <div><p className="font-semibold text-[10px]">{exp.position}</p><p className="text-[9px] opacity-50">{exp.company}</p></div>
               <span className="rounded-full px-2 py-0.5 text-[7px]" style={{ backgroundColor: `hsl(${c.primaryColour} / 0.1)`, color: `hsl(${c.primaryColour})` }}>{exp.startDate} — {exp.endDate}</span>
             </div>
-            <p className="text-[9px] opacity-70 mt-0.5 leading-relaxed">{exp.description}</p>
+            {renderDescription(exp.description, "text-[9px] opacity-70 mt-0.5 leading-relaxed")}
           </div>
         ))}
 

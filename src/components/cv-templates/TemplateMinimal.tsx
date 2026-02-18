@@ -1,5 +1,6 @@
 import { CVData, CVCustomisation } from "@/types/cv";
 import { Linkedin, Github, Mail, Smartphone, MapPin } from "lucide-react";
+import { renderDescription } from "./renderDescription";
 
 interface Props { data: CVData; customisation: CVCustomisation; }
 
@@ -31,7 +32,7 @@ const TemplateMinimal = ({ data, customisation: c }: Props) => {
         <div key={exp.id} className="mb-3 pl-3" style={{ borderLeft: `2px solid hsl(${c.primaryColour} / 0.4)` }}>
           <p className="font-semibold text-[10px]">{exp.position} <span className="font-normal opacity-50">at {exp.company}</span></p>
           <p className="text-[8px] opacity-50">{exp.startDate} — {exp.endDate}</p>
-          <p className="text-[9px] opacity-70 mt-0.5 leading-relaxed">{exp.description}</p>
+          {renderDescription(exp.description, "text-[9px] opacity-70 mt-0.5 leading-relaxed")}
         </div>
       ))}
 
