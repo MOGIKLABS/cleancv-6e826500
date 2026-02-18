@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import { DraftData, deleteDraftFromHistory, exportDraftAsJSON, importDraftFromJSON } from "@/lib/drafts";
 import { Button } from "@/components/ui/button";
 import { Trash2, Download, Upload, FolderOpen } from "lucide-react";
@@ -15,8 +15,15 @@ interface DraftsPanelProps {
 
 const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport, onRename }: DraftsPanelProps) => {
   const importRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+
+  useEffect(() => {
+    if (editingId && editInputRef.current) {
+      editInputRef.current.focus({ preventScroll: true });
+    }
+  }, [editingId]);
 
   const handleDelete = (id: string) => {
     const updated = deleteDraftFromHistory(id);
@@ -89,7 +96,7 @@ const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport,
               <div className="min-w-0 flex-1">
                 {editingId === draft.id ? (
                   <input
-                    ref={useCallback((el: HTMLInputElement | null) => { if (el) requestAnimationFrame(() => el.focus()); }, [])}
+                    ref={editInputRef}
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
                     onBlur={commitRename}
