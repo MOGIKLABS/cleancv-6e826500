@@ -132,7 +132,7 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
 
   // ── Education helpers ──
   const addEducation = () => {
-    const newEdu: Education = { id: Date.now().toString(), institution: "", degree: "", field: "", startDate: "", endDate: "", inProgress: false };
+    const newEdu: Education = { id: Date.now().toString(), institution: "", degree: "", field: "", grade: "", startDate: "", endDate: "", inProgress: false };
     onChange({ ...data, education: [...data.education, newEdu] });
   };
 
@@ -352,9 +352,15 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
                   <Input value={edu.field} onChange={(e) => updateEducation(edu.id, "field", e.target.value)} placeholder="Computer Science" />
                 </div>
               </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Institution</Label>
-                <Input value={edu.institution} onChange={(e) => updateEducation(edu.id, "institution", e.target.value)} placeholder="University Name" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Institution</Label>
+                  <Input value={edu.institution} onChange={(e) => updateEducation(edu.id, "institution", e.target.value)} placeholder="University Name" />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Grade / Level</Label>
+                  <Input value={edu.grade || ""} onChange={(e) => updateEducation(edu.id, "grade", e.target.value)} placeholder="e.g. First Class, 3.8 GPA" />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

@@ -64,7 +64,7 @@ const TemplateClassic = ({ data, customisation }: Props) => {
             <h3 className="text-[9px] uppercase tracking-widest font-semibold mb-2" style={{ color: `hsl(${c.primaryColour})` }}>Education</h3>
             {education.map((edu) => (
               <div key={edu.id} className="mb-2">
-                <p className="font-semibold text-[9px]">{edu.degree} {edu.field}</p>
+                <p className="font-semibold text-[9px]">{edu.degree} {edu.field}{edu.grade ? ` — ${edu.grade}` : ""}</p>
                 <p className="text-[8px] opacity-70">{edu.institution}</p>
                 <p className="text-[8px]" style={{ color: `hsl(${c.primaryColour})` }}>{edu.startDate} — {edu.endDate}</p>
               </div>

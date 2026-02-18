@@ -24,6 +24,7 @@ export interface Education {
   institution: string;
   degree: string;
   field: string;
+  grade: string;
   startDate: string;
   endDate: string;
   inProgress?: boolean;

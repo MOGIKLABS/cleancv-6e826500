@@ -58,7 +58,7 @@ const TemplateCreative = ({ data, customisation: c }: Props) => {
         <h2 className="text-[9px] uppercase tracking-widest font-semibold" style={{ color: `hsl(${c.primaryColour})`, fontFamily: c.headingFont }}>Education</h2>
         {education.map(edu => (
           <div key={edu.id} className="mb-1">
-            <p className="font-semibold text-[9px]">{edu.degree} {edu.field}</p>
+            <p className="font-semibold text-[9px]">{edu.degree} {edu.field}{edu.grade ? ` — ${edu.grade}` : ""}</p>
             <p className="text-[8px] opacity-50">{edu.institution} · {edu.startDate}–{edu.endDate}</p>
           </div>
         ))}
