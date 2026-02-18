@@ -41,18 +41,18 @@ const Index = () => {
       {/* Hero */}
       <section className="relative overflow-hidden hero-gradient pt-16">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_50%_50%,hsl(0_0%_30%),transparent_70%)]" />
-        <div className="relative container flex flex-col items-center justify-center py-32 text-center lg:py-44">
-          <p className="text-xs uppercase tracking-[0.35em] text-hero-foreground/50 mb-8 animate-fade-in font-sans">FREE · NO SIGN-UP ·DATA STORED LOCALLY      
-
+        <div className="relative container flex flex-col items-center justify-center py-20 sm:py-32 text-center lg:py-44 px-4">
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.25em] sm:tracking-[0.35em] text-hero-foreground/50 mb-6 sm:mb-8 animate-fade-in font-sans">
+            FREE · NO SIGN-UP · DATA STORED LOCALLY
           </p>
-          <h1 className="max-w-3xl font-display text-5xl font-light tracking-wide text-hero-foreground sm:text-6xl lg:text-7xl animate-fade-up leading-[1.1]">Clean CV building
-
+          <h1 className="max-w-3xl font-display text-3xl sm:text-5xl lg:text-7xl font-light tracking-wide text-hero-foreground animate-fade-up leading-[1.1]">
+            Clean CV building
           </h1>
-          <p className="mt-8 max-w-lg text-base text-hero-foreground/60 animate-fade-up font-light leading-relaxed" style={{ animationDelay: "0.1s" }}>Real-time preview, modern templates, zero friction.
-
+          <p className="mt-6 sm:mt-8 max-w-lg text-sm sm:text-base text-hero-foreground/60 animate-fade-up font-light leading-relaxed px-4" style={{ animationDelay: "0.1s" }}>
+            Real-time preview, modern templates, zero friction.
           </p>
-          <div className="mt-12 flex gap-4 animate-fade-up" style={{ animationDelay: "0.2s" }}>
-            <Button size="lg" onClick={() => navigate("/builder")} className="text-sm uppercase tracking-[0.2em] px-10 h-12 font-sans">
+          <div className="mt-8 sm:mt-12 flex gap-4 animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            <Button size="lg" onClick={() => navigate("/builder")} className="text-xs sm:text-sm uppercase tracking-[0.2em] px-6 sm:px-10 h-11 sm:h-12 font-sans">
               Start Building
             </Button>
           </div>
@@ -60,9 +60,9 @@ const Index = () => {
       </section>
 
       {/* Features */}
-      <section className="container py-28">
-        <div className="text-center mb-20">
-          <h2 className="font-display text-4xl font-light tracking-wide text-foreground">CleanCV</h2>
+      <section className="container py-16 sm:py-28 px-4">
+        <div className="text-center mb-12 sm:mb-20">
+          <h2 className="font-display text-3xl sm:text-4xl font-light tracking-wide text-foreground">CleanCV</h2>
           <p className="mt-4 text-muted-foreground text-sm uppercase tracking-[0.25em] font-sans">Everything you need, nothing you don't.</p>
         </div>
         <div className="grid gap-8 md:grid-cols-3">
@@ -97,7 +97,7 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="border-t border-border">
-        <div className="container py-10 flex items-center justify-between text-xs text-muted-foreground uppercase tracking-[0.15em] font-sans">
+        <div className="container py-8 sm:py-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground uppercase tracking-[0.15em] font-sans px-4">
           <div className="flex items-center gap-2">
             <FileText className="h-3.5 w-3.5" />
             <span className="font-display text-sm normal-case tracking-[0.08em] text-foreground">CLEANCV</span>

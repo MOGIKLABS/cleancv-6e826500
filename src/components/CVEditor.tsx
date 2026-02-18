@@ -54,7 +54,7 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
   };
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-6 sm:space-y-8 p-4 sm:p-6">
       {/* Personal Info */}
       <section>
         <SectionHeader icon={User} title="Personal Information" />
