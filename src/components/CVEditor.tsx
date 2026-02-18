@@ -273,10 +273,13 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
               <Input value={data.personal.github || ""} onChange={(e) => updatePersonal("github", e.target.value)} placeholder="github.com/username" />
             </div>
           </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Professional Summary</Label>
-            <Textarea value={data.personal.summary} onChange={(e) => updatePersonal("summary", e.target.value)} placeholder="Brief professional summary..." rows={3} />
-          </div>
+          <BulletTextarea
+            label="Professional Summary"
+            value={data.personal.summary}
+            onChange={(v) => updatePersonal("summary", v)}
+            placeholder="Brief professional summary..."
+            rows={3}
+          />
         </div>
       </section>
 

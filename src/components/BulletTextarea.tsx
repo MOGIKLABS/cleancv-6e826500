@@ -30,6 +30,20 @@ const BulletTextarea = ({ value, onChange, placeholder, rows = 3, label }: Bulle
     if (e.key === "Enter") {
       const target = e.currentTarget;
       const pos = target.selectionStart;
+
+      // Shift+Enter always inserts a plain newline
+      if (e.shiftKey) {
+        e.preventDefault();
+        const before = value.substring(0, pos);
+        const after = value.substring(pos);
+        onChange(before + "\n" + after);
+        setTimeout(() => {
+          target.selectionStart = target.selectionEnd = pos + 1;
+        }, 0);
+        return;
+      }
+
+      // Regular Enter: continue bullet if current line is bulleted
       const lines = value.substring(0, pos).split("\n");
       const currentLine = lines[lines.length - 1];
 
@@ -38,7 +52,6 @@ const BulletTextarea = ({ value, onChange, placeholder, rows = 3, label }: Bulle
         const before = value.substring(0, pos);
         const after = value.substring(pos);
         onChange(before + "\n• " + after);
-        // Set cursor position after React re-render
         setTimeout(() => {
           target.selectionStart = target.selectionEnd = pos + 3;
         }, 0);
