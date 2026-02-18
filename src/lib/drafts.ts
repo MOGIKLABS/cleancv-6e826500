@@ -104,6 +104,14 @@ export function saveDraftToHistory(draft: DraftData): DraftData[] {
   return trimmed;
 }
 
+export function renameDraftInHistory(id: string, newLabel: string): DraftData[] {
+  const all = loadAllDrafts();
+  const draft = all.find((d) => d.id === id);
+  if (draft) draft.label = newLabel;
+  localStorage.setItem(DRAFTS_KEY, JSON.stringify(all));
+  return all;
+}
+
 export function deleteDraftFromHistory(id: string): DraftData[] {
   const remaining = loadAllDrafts().filter((d) => d.id !== id);
   localStorage.setItem(DRAFTS_KEY, JSON.stringify(remaining));
