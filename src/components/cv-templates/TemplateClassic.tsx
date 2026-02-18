@@ -1,5 +1,5 @@
 import { CVData, CVCustomisation } from "@/types/cv";
-import { Mail, Phone, MapPin, Linkedin, Github } from "lucide-react";
+import { Mail, Smartphone, MapPin, Linkedin, Github } from "lucide-react";
 
 interface Props {
   data: CVData;
@@ -38,11 +38,11 @@ const TemplateClassic = ({ data, customisation }: Props) => {
           <div>
             <h3 className="text-[9px] uppercase tracking-widest font-semibold mb-2" style={{ color: `hsl(${c.primaryColour})` }}>Contact</h3>
             <div className="space-y-1.5 text-[9px]">
-              <div className="flex items-center gap-1.5"><Mail className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><span className="truncate">{personal.email}</span></div>
-              <div className="flex items-center gap-1.5"><Phone className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><span>{personal.phone}</span></div>
+              <div className="flex items-center gap-1.5"><Mail className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><a href={`mailto:${personal.email}`} className="truncate underline">{personal.email}</a></div>
+              <div className="flex items-center gap-1.5"><Smartphone className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><span>{personal.phone}</span></div>
               <div className="flex items-center gap-1.5"><MapPin className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><span>{personal.location}</span></div>
-              {personal.linkedin && <div className="flex items-center gap-1.5"><Linkedin className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><span className="truncate">{personal.linkedin}</span></div>}
-              {personal.github && <div className="flex items-center gap-1.5"><Github className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><span className="truncate">{personal.github}</span></div>}
+              {personal.linkedin && <div className="flex items-center gap-1.5"><Linkedin className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" className="truncate underline">{personal.linkedin}</a></div>}
+              {personal.github && <div className="flex items-center gap-1.5"><Github className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><a href={personal.github.startsWith("http") ? personal.github : `https://${personal.github}`} target="_blank" rel="noopener noreferrer" className="truncate underline">{personal.github}</a></div>}
             </div>
           </div>
 

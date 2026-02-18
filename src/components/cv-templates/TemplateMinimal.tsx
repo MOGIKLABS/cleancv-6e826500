@@ -1,5 +1,5 @@
 import { CVData, CVCustomisation } from "@/types/cv";
-import { Linkedin, Github } from "lucide-react";
+import { Linkedin, Github, Mail, Smartphone, MapPin } from "lucide-react";
 
 interface Props { data: CVData; customisation: CVCustomisation; }
 
@@ -17,11 +17,11 @@ const TemplateMinimal = ({ data, customisation: c }: Props) => {
       </div>
 
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] opacity-60 mb-4 pb-3" style={{ borderBottom: `1px solid hsl(${c.primaryColour} / 0.3)` }}>
-        <span>{personal.email}</span>
-        <span>{personal.phone}</span>
-        <span>{personal.location}</span>
-        {personal.linkedin && <span className="flex items-center gap-1"><Linkedin className="h-2.5 w-2.5" />{personal.linkedin}</span>}
-        {personal.github && <span className="flex items-center gap-1"><Github className="h-2.5 w-2.5" />{personal.github}</span>}
+        <a href={`mailto:${personal.email}`} className="flex items-center gap-1 underline"><Mail className="h-2.5 w-2.5" />{personal.email}</a>
+        <span className="flex items-center gap-1"><Smartphone className="h-2.5 w-2.5" />{personal.phone}</span>
+        <span className="flex items-center gap-1"><MapPin className="h-2.5 w-2.5" />{personal.location}</span>
+        {personal.linkedin && <a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 underline"><Linkedin className="h-2.5 w-2.5" />{personal.linkedin}</a>}
+        {personal.github && <a href={personal.github.startsWith("http") ? personal.github : `https://${personal.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 underline"><Github className="h-2.5 w-2.5" />{personal.github}</a>}
       </div>
 
       {personal.summary && <p className="text-[10px] leading-relaxed opacity-75 mb-4" style={{ fontStyle: c.bodyItalic ? "italic" : "normal" }}>{personal.summary}</p>}

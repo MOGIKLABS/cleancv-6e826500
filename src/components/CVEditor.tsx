@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench, RotateCcw } from "lucide-react";
+import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench, RotateCcw, Mail, Smartphone, MapPin, Linkedin, Github } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
 import { defaultCVData } from "@/types/cv";
 
@@ -85,25 +85,25 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs text-muted-foreground">Email</Label>
+              <Label className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />Email</Label>
               <Input value={data.personal.email} onChange={(e) => updatePersonal("email", e.target.value)} placeholder="email@example.com" />
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground">Phone</Label>
+              <Label className="text-xs text-muted-foreground flex items-center gap-1"><Smartphone className="h-3 w-3" />Phone</Label>
               <Input value={data.personal.phone} onChange={(e) => updatePersonal("phone", e.target.value)} placeholder="+1 555 123 4567" />
             </div>
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Location</Label>
+            <Label className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />Location</Label>
             <Input value={data.personal.location} onChange={(e) => updatePersonal("location", e.target.value)} placeholder="San Francisco, CA" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs text-muted-foreground">LinkedIn</Label>
+              <Label className="text-xs text-muted-foreground flex items-center gap-1"><Linkedin className="h-3 w-3" />LinkedIn</Label>
               <Input value={data.personal.linkedin || ""} onChange={(e) => updatePersonal("linkedin", e.target.value)} placeholder="linkedin.com/in/username" />
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground">GitHub</Label>
+              <Label className="text-xs text-muted-foreground flex items-center gap-1"><Github className="h-3 w-3" />GitHub</Label>
               <Input value={data.personal.github || ""} onChange={(e) => updatePersonal("github", e.target.value)} placeholder="github.com/username" />
             </div>
           </div>
