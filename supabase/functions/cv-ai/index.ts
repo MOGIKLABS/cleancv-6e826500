@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,12 +7,82 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ALLOWED_ACTIONS = ["polish", "ats", "cover-letter", "parse"];
+const MAX_BODY_SIZE = 100_000; // 100 KB total request body
+const MAX_RAW_TEXT_SIZE = 50_000;
+const MAX_JOB_DESC_SIZE = 10_000;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const body = await req.json();
-    const { action, cvData, jobDescription, rawText, fileName } = body;
+    // ── Authentication ──
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Input validation ──
+    const rawBody = await req.text();
+    if (rawBody.length > MAX_BODY_SIZE) {
+      return new Response(JSON.stringify({ error: "Request too large" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { action, cvData, jobDescription, rawText } = body;
+
+    if (typeof action !== "string" || !ALLOWED_ACTIONS.includes(action)) {
+      return new Response(JSON.stringify({ error: "Invalid action" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (rawText !== undefined && (typeof rawText !== "string" || rawText.length > MAX_RAW_TEXT_SIZE)) {
+      return new Response(JSON.stringify({ error: "rawText too large or invalid" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (jobDescription !== undefined && (typeof jobDescription !== "string" || jobDescription.length > MAX_JOB_DESC_SIZE)) {
+      return new Response(JSON.stringify({ error: "jobDescription too large or invalid" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Build prompts ──
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -36,7 +107,6 @@ STRUCTURE RULES:
 - Keep descriptions concise but impactful.
 
 Return ONLY valid JSON matching the input structure. No markdown, no explanation.`;
-
       userPrompt = JSON.stringify(cvData);
     } else if (action === "ats") {
       systemPrompt = `You are an ATS (Applicant Tracking System) analysis expert specialising in music industry and technology roles. Analyse the CV against the provided job description.
@@ -56,7 +126,6 @@ RULES:
 - Suggestions should be specific, actionable, and written for music/tech industry context.
 - Focus on terminology alignment, quantifiable achievements, and role-specific language.
 - Return ONLY valid JSON. No markdown, no explanation.`;
-
       userPrompt = JSON.stringify({ cv: cvData, jobDescription });
     } else if (action === "cover-letter") {
       systemPrompt = `You are a professional cover letter writer specialising in the music industry and technology sector.
@@ -79,7 +148,6 @@ STRUCTURE:
 - Do NOT include the greeting (Dear...) or sign-off (Yours sincerely) — only the body paragraphs.
 
 Return ONLY the plain text body. No JSON, no markdown, no explanation.`;
-
       userPrompt = JSON.stringify({ cv: cvData, jobDescription });
     } else if (action === "parse") {
       systemPrompt = `You are a CV parser. Extract structured data from the raw CV text provided.
@@ -110,13 +178,7 @@ RULES:
 - Generate unique string IDs for each experience and education entry.
 - If information is not found, leave the field as an empty string or empty array.
 - Return ONLY valid JSON. No markdown, no explanation.`;
-
-      userPrompt = rawText || "";
-    } else {
-      return new Response(JSON.stringify({ error: "Invalid action" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      userPrompt = (rawText as string) || "";
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -158,21 +220,19 @@ RULES:
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    // Cover letter returns plain text, not JSON
     if (action === "cover-letter") {
       return new Response(JSON.stringify({ body: content.trim() }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Parse the JSON from the response, stripping markdown fences if present
     let parsed;
     try {
       const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       parsed = JSON.parse(cleaned);
     } catch {
       console.error("Failed to parse AI response:", content);
-      return new Response(JSON.stringify({ error: "Failed to parse AI response", raw: content }), {
+      return new Response(JSON.stringify({ error: "Failed to parse AI response" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
