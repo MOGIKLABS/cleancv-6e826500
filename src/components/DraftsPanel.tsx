@@ -38,7 +38,9 @@ const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport,
     }
   };
 
-  const startEditing = (draft: DraftData) => {
+  const startEditing = (e: React.MouseEvent, draft: DraftData) => {
+    e.preventDefault();
+    e.stopPropagation();
     setEditingId(draft.id);
     setEditValue(draft.label || "Untitled Draft");
   };
@@ -87,7 +89,7 @@ const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport,
               <div className="min-w-0 flex-1">
                 {editingId === draft.id ? (
                   <input
-                    autoFocus
+                    ref={(el) => el?.focus()}
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
                     onBlur={commitRename}
@@ -95,12 +97,13 @@ const DraftsPanel = ({ drafts, currentDraftId, onLoad, onDraftsChange, onImport,
                       if (e.key === "Enter") commitRename();
                       if (e.key === "Escape") setEditingId(null);
                     }}
+                    onClick={(e) => e.stopPropagation()}
                     className="text-sm font-medium text-foreground bg-transparent border-b border-primary outline-none w-full"
                   />
                 ) : (
                   <p
                     className="text-sm font-medium text-foreground truncate cursor-pointer hover:text-primary transition-colors"
-                    onClick={() => startEditing(draft)}
+                    onClick={(e) => startEditing(e, draft)}
                     title="Click to rename"
                   >
                     {draft.label || "Untitled Draft"}
