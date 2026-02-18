@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { CoverLetterData, CVData, CVCustomisation } from "@/types/cv";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -9,6 +8,7 @@ import { Mail, Sparkles, Loader2, Upload, ImageIcon, PenLine } from "lucide-reac
 import SignatureCanvas from "@/components/SignatureCanvas";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import BulletTextarea from "@/components/BulletTextarea";
 
 interface CoverLetterEditorProps {
   data: CoverLetterData;
@@ -114,17 +114,16 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
       {/* Body */}
       <div>
         <div className="flex items-center justify-between mb-1">
-          <Label className="text-xs text-muted-foreground">Cover Letter Body</Label>
           <span className={`text-[10px] ${wordCount > 500 ? "text-destructive" : "text-muted-foreground"}`}>
             {wordCount}/500 words
           </span>
         </div>
-        <Textarea
+        <BulletTextarea
+          label="Cover Letter Body"
           value={data.body}
-          onChange={(e) => update({ body: e.target.value })}
+          onChange={(v) => update({ body: v })}
           placeholder="Write or generate your cover letter body..."
           rows={12}
-          className="text-sm"
         />
       </div>
 
