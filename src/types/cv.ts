@@ -28,6 +28,26 @@ export interface Education {
   endDate: string;
 }
 
+export interface CoverLetterData {
+  recipientName: string;
+  date: string; // ISO date string
+  jobTitle: string; // auto-populated from ATS tab
+  body: string; // the main letter content (max 500 words)
+  signOff: string;
+  signatureMode: "image" | "draw"; // toggle between uploaded image or drawn signature
+  signatureImage: string; // base64 data URL for uploaded or drawn signature
+}
+
+export const defaultCoverLetterData: CoverLetterData = {
+  recipientName: "Dear Hiring Manager,",
+  date: new Date().toISOString().split("T")[0],
+  jobTitle: "",
+  body: "",
+  signOff: "Yours sincerely,",
+  signatureMode: "draw",
+  signatureImage: "",
+};
+
 export type TemplateName = "classic" | "modern" | "minimal" | "creative" | "executive";
 
 export interface CVCustomisation {

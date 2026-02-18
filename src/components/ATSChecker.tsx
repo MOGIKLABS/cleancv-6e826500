@@ -17,10 +17,11 @@ interface ATSResult {
 
 interface ATSCheckerProps {
   cvData: CVData;
+  jobDescription: string;
+  onJobDescriptionChange: (value: string) => void;
 }
 
-const ATSChecker = ({ cvData }: ATSCheckerProps) => {
-  const [jobDescription, setJobDescription] = useState("");
+const ATSChecker = ({ cvData, jobDescription, onJobDescriptionChange }: ATSCheckerProps) => {
   const [result, setResult] = useState<ATSResult | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -59,7 +60,7 @@ const ATSChecker = ({ cvData }: ATSCheckerProps) => {
       <p className="text-xs text-muted-foreground">Paste the job description below to check how well your CV matches.</p>
       <Textarea
         value={jobDescription}
-        onChange={(e) => setJobDescription(e.target.value)}
+        onChange={(e) => onJobDescriptionChange(e.target.value)}
         placeholder="Paste the full job description here..."
         rows={6}
         className="text-sm"
