@@ -1,9 +1,11 @@
+import { useState, KeyboardEvent } from "react";
 import { CVData, Experience, Education } from "@/types/cv";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench, RotateCcw, Mail, Smartphone, MapPin, Linkedin, Github } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Trash2, User, Briefcase, GraduationCap, Wrench, RotateCcw, Mail, Smartphone, MapPin, Linkedin, Github, ChevronUp, ChevronDown, X } from "lucide-react";
 import PhotoUpload from "@/components/PhotoUpload";
 import { defaultCVData } from "@/types/cv";
 import MonthYearPicker from "@/components/MonthYearPicker";
@@ -22,10 +24,13 @@ const SectionHeader = ({ icon: Icon, title }: { icon: React.ElementType; title: 
 );
 
 const CVEditor = ({ data, onChange }: CVEditorProps) => {
+  const [skillInput, setSkillInput] = useState("");
+
   const updatePersonal = (field: string, value: string) => {
     onChange({ ...data, personal: { ...data.personal, [field]: value } });
   };
 
+  // ── Experience helpers ──
   const addExperience = () => {
     const newExp: Experience = { id: Date.now().toString(), company: "", position: "", startDate: "", endDate: "", description: "" };
     onChange({ ...data, experiences: [...data.experiences, newExp] });
@@ -39,21 +44,86 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
     onChange({ ...data, experiences: data.experiences.filter((e) => e.id !== id) });
   };
 
+  const moveExperience = (index: number, direction: -1 | 1) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= data.experiences.length) return;
+    const items = [...data.experiences];
+    [items[index], items[newIndex]] = [items[newIndex], items[index]];
+    onChange({ ...data, experiences: items });
+  };
+
+  // ── Education helpers ──
   const addEducation = () => {
-    const newEdu: Education = { id: Date.now().toString(), institution: "", degree: "", field: "", startDate: "", endDate: "" };
+    const newEdu: Education = { id: Date.now().toString(), institution: "", degree: "", field: "", startDate: "", endDate: "", inProgress: false };
     onChange({ ...data, education: [...data.education, newEdu] });
   };
 
-  const updateEducation = (id: string, field: string, value: string) => {
-    onChange({ ...data, education: data.education.map((e) => (e.id === id ? { ...e, [field]: value } : e)) });
+  const updateEducation = (id: string, field: string, value: string | boolean) => {
+    onChange({
+      ...data,
+      education: data.education.map((e) => {
+        if (e.id !== id) return e;
+        const updated = { ...e, [field]: value };
+        if (field === "inProgress" && value === true) {
+          updated.endDate = "In Progress";
+        }
+        if (field === "inProgress" && value === false && e.endDate === "In Progress") {
+          updated.endDate = "";
+        }
+        return updated;
+      }),
+    });
   };
 
   const removeEducation = (id: string) => {
     onChange({ ...data, education: data.education.filter((e) => e.id !== id) });
   };
 
-  const updateSkills = (value: string) => {
-    onChange({ ...data, skills: value.split(",").map((s) => s.trim()).filter(Boolean) });
+  const moveEducation = (index: number, direction: -1 | 1) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= data.education.length) return;
+    const items = [...data.education];
+    [items[index], items[newIndex]] = [items[newIndex], items[index]];
+    onChange({ ...data, education: items });
+  };
+
+  // ── Skills helpers ──
+  const addSkill = (skill: string) => {
+    const trimmed = skill.trim();
+    if (trimmed && !data.skills.includes(trimmed)) {
+      onChange({ ...data, skills: [...data.skills, trimmed] });
+    }
+    setSkillInput("");
+  };
+
+  const removeSkill = (skill: string) => {
+    onChange({ ...data, skills: data.skills.filter((s) => s !== skill) });
+  };
+
+  const handleSkillKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addSkill(skillInput);
+    }
+    if (e.key === "Backspace" && skillInput === "" && data.skills.length > 0) {
+      removeSkill(data.skills[data.skills.length - 1]);
+    }
+  };
+
+  const handleSkillInputChange = (value: string) => {
+    if (value.includes(",")) {
+      const parts = value.split(",");
+      const newSkills = parts
+        .slice(0, -1)
+        .map((p) => p.trim())
+        .filter((p) => p && !data.skills.includes(p));
+      if (newSkills.length > 0) {
+        onChange({ ...data, skills: [...data.skills, ...newSkills] });
+      }
+      setSkillInput(parts[parts.length - 1]);
+    } else {
+      setSkillInput(value);
+    }
   };
 
   return (
@@ -62,7 +132,6 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
       <section>
         <SectionHeader icon={User} title="Personal Information" />
         <div className="grid gap-3">
-          {/* Photo */}
           <div className="flex items-center gap-3">
             <PhotoUpload
               photo={data.personal.photo}
@@ -120,11 +189,20 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
       <section>
         <SectionHeader icon={Briefcase} title="Experience" />
         <div className="space-y-4">
-          {data.experiences.map((exp) => (
+          {data.experiences.map((exp, index) => (
             <div key={exp.id} className="rounded-lg border border-border bg-muted/30 p-4 space-y-3 relative group">
-              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive transition-opacity" onClick={() => removeExperience(exp.id)}>
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {/* Top-right actions */}
+              <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" disabled={index === 0} onClick={() => moveExperience(index, -1)} title="Move up">
+                  <ChevronUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" disabled={index === data.experiences.length - 1} onClick={() => moveExperience(index, 1)} title="Move down">
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removeExperience(exp.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-muted-foreground">Position</Label>
@@ -164,11 +242,20 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
       <section>
         <SectionHeader icon={GraduationCap} title="Education" />
         <div className="space-y-4">
-          {data.education.map((edu) => (
+          {data.education.map((edu, index) => (
             <div key={edu.id} className="rounded-lg border border-border bg-muted/30 p-4 space-y-3 relative group">
-              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive transition-opacity" onClick={() => removeEducation(edu.id)}>
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {/* Top-right actions */}
+              <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" disabled={index === 0} onClick={() => moveEducation(index, -1)} title="Move up">
+                  <ChevronUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" disabled={index === data.education.length - 1} onClick={() => moveEducation(index, 1)} title="Move down">
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removeEducation(edu.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-muted-foreground">Degree</Label>
@@ -193,6 +280,17 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
                   <MonthYearPicker value={edu.endDate} onChange={(v) => updateEducation(edu.id, "endDate", v)} placeholder="Jun 2018" />
                 </div>
               </div>
+              {/* In Progress checkbox */}
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id={`inProgress-${edu.id}`}
+                  checked={edu.inProgress || false}
+                  onCheckedChange={(checked) => updateEducation(edu.id, "inProgress", !!checked)}
+                />
+                <Label htmlFor={`inProgress-${edu.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                  In Progress (not yet graduated)
+                </Label>
+              </div>
             </div>
           ))}
           <Button variant="outline" onClick={addEducation} className="w-full border-dashed">
@@ -205,8 +303,34 @@ const CVEditor = ({ data, onChange }: CVEditorProps) => {
       <section>
         <SectionHeader icon={Wrench} title="Skills" />
         <div>
-          <Label className="text-xs text-muted-foreground">Skills (comma separated)</Label>
-          <Textarea value={data.skills.join(", ")} onChange={(e) => updateSkills(e.target.value)} placeholder="React, TypeScript, Node.js..." rows={2} />
+          <Label className="text-xs text-muted-foreground mb-2 block">Type a skill and press Enter or comma to add</Label>
+          <div className="flex flex-wrap gap-1.5 p-2 rounded-md border border-input bg-background min-h-[42px] items-center cursor-text" onClick={() => document.getElementById("skill-input")?.focus()}>
+            {data.skills.map((skill) => (
+              <span
+                key={skill}
+                className="inline-flex items-center gap-1 rounded-md bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium"
+              >
+                {skill}
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); removeSkill(skill); }}
+                  className="hover:text-destructive transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+            <input
+              id="skill-input"
+              type="text"
+              value={skillInput}
+              onChange={(e) => handleSkillInputChange(e.target.value)}
+              onKeyDown={handleSkillKeyDown}
+              onBlur={() => { if (skillInput.trim()) addSkill(skillInput); }}
+              placeholder={data.skills.length === 0 ? "React, TypeScript, Node.js..." : "Add more..."}
+              className="flex-1 min-w-[120px] bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
+            />
+          </div>
         </div>
       </section>
     </div>
