@@ -119,3 +119,73 @@
     box-shadow: 0 4px 24px -4px hsl(0 0% 0% / 0.12), 0 0 0 1px hsl(0 0% 90% / 0.5);
   }
 }
+
+/*
+ * One-page mode: reduce margins, padding, and spacing FIRST
+ * so the transform scale only needs minimal adjustment.
+ */
+.one-page-mode .cv-shadow {
+  aspect-ratio: auto !important; /* remove fixed aspect ratio so content flows naturally */
+}
+
+/* Reduce all padding inside the CV */
+.one-page-mode [class*="p-5"],
+.one-page-mode [class*="p-6"],
+.one-page-mode [class*="p-7"],
+.one-page-mode [class*="p-8"] {
+  padding: 12px !important;
+}
+
+.one-page-mode [class*="px-6"],
+.one-page-mode [class*="px-7"] {
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+}
+
+.one-page-mode [class*="py-4"],
+.one-page-mode [class*="py-3"],
+.one-page-mode [class*="pt-5"],
+.one-page-mode [class*="pb-6"] {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+/* Tighten vertical spacing between sections */
+.one-page-mode [class*="space-y-3"] > * + * { margin-top: 6px !important; }
+.one-page-mode [class*="space-y-4"] > * + * { margin-top: 8px !important; }
+.one-page-mode [class*="space-y-5"] > * + * { margin-top: 8px !important; }
+.one-page-mode [class*="gap-5"] { gap: 8px !important; }
+.one-page-mode [class*="gap-4"] { gap: 6px !important; }
+
+/* Reduce section header margins */
+.one-page-mode [class*="mb-4"] { margin-bottom: 6px !important; }
+.one-page-mode [class*="mb-3"] { margin-bottom: 4px !important; }
+.one-page-mode [class*="mb-2"] { margin-bottom: 3px !important; }
+
+/* Slightly compress line-height */
+.one-page-mode p,
+.one-page-mode li,
+.one-page-mode span {
+  line-height: 1.35 !important;
+}
+
+/* Reduce top/bottom borders & dividers */
+.one-page-mode [class*="pb-3"] { padding-bottom: 4px !important; }
+.one-page-mode [class*="pt-5"] { padding-top: 6px !important; }
+
+/* Photo slightly smaller */
+.one-page-mode img[class*="rounded-full"],
+.one-page-mode div[class*="rounded-full"] {
+  width: 48px !important;
+  height: 48px !important;
+}
+
+/* Print support — apply same compression when printing in one-page mode */
+@media print {
+  .one-page-mode {
+    width: 210mm !important;
+    max-height: 297mm !important;
+    overflow: hidden !important;
+    page-break-after: avoid !important;
+  }
+}

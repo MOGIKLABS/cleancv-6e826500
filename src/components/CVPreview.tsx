@@ -16,6 +16,12 @@ const templates = {
   executive: TemplateExecutive,
 };
 
+/**
+ * One-page strategy (in order of priority):
+ * 1. Reduce margins & padding via a CSS class
+ * 2. Tighten line-height & spacing
+ * 3. Only then, scale transform as a last resort (min 0.78 to stay legible)
+ */
 const CVPreview = ({ data, customisation, onePage }: CVPreviewProps) => {
   const Template = templates[customisation.template];
   const contentRef = useRef<HTMLDivElement>(null);
@@ -27,22 +33,26 @@ const CVPreview = ({ data, customisation, onePage }: CVPreviewProps) => {
       return;
     }
 
-    // A4 height in px at 96dpi ≈ 1122px (297mm)
-    const a4Height = 1122;
-    const contentHeight = contentRef.current.scrollHeight;
+    // Wait a tick for the CSS class to apply first
+    requestAnimationFrame(() => {
+      if (!contentRef.current) return;
+      const a4Height = 1122; // 297mm at 96dpi
+      const contentHeight = contentRef.current.scrollHeight;
 
-    if (contentHeight > a4Height) {
-      // Calculate scale but cap minimum at 0.65 to keep text legible
-      const newScale = Math.max(0.65, a4Height / contentHeight);
-      setScale(newScale);
-    } else {
-      setScale(1);
-    }
+      if (contentHeight > a4Height) {
+        // Scale only the remaining overflow — margins already reduced
+        const newScale = Math.max(0.78, a4Height / contentHeight);
+        setScale(newScale);
+      } else {
+        setScale(1);
+      }
+    });
   }, [onePage, data, customisation]);
 
   return (
     <div
       id="cv-preview"
+      className={onePage ? "one-page-mode" : ""}
       style={onePage ? {
         width: "210mm",
         height: "297mm",
