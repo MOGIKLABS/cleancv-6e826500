@@ -1,13 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-const ALLOWED_ORIGINS = [
-  "https://cleancv.lovable.app",
-  "https://id-preview--51e4f04b-4aeb-490c-a1fb-d71253d70af5.lovable.app",
-  "http://localhost:8080",
-  "http://localhost:5173",
-];
-
 const ALLOWED_ACTIONS = ["polish", "ats", "cover-letter", "parse"];
 const MAX_BODY_SIZE = 100_000;
 const MAX_RAW_TEXT_SIZE = 50_000;
@@ -15,15 +8,12 @@ const MAX_JOB_DESC_SIZE = 10_000;
 const RATE_LIMIT = 10; // max requests per window
 const RATE_WINDOW_MINUTES = 60;
 
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("Origin") || "";
-  return {
-    "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
-    "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  };
-}
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 
 function hashIP(ip: string): string {
   // Simple hash to avoid storing raw IPs
@@ -37,7 +27,6 @@ function hashIP(ip: string): string {
 }
 
 serve(async (req) => {
-  const corsHeaders = getCorsHeaders(req);
 
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 

@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const STORAGE_KEY = "cleancv-draft";
+const DRAFT_VERSION = 2; // bump to invalidate old drafts with demo data
 
 interface DraftData {
   cvData: CVData;
@@ -25,13 +26,20 @@ interface DraftData {
   coverLetter: CoverLetterData;
   jobDescription: string;
   savedAt: string;
+  version?: number;
 }
 
 const loadDraft = (): DraftData | null => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as DraftData;
+    const parsed = JSON.parse(raw) as DraftData;
+    // Discard drafts from older versions (may contain demo data)
+    if (!parsed.version || parsed.version < DRAFT_VERSION) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -60,6 +68,7 @@ const Builder = () => {
       coverLetter,
       jobDescription,
       savedAt: new Date().toISOString(),
+      version: DRAFT_VERSION,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     setLastSaved(new Date());
