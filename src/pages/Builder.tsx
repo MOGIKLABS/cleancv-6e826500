@@ -11,6 +11,7 @@ import ATSChecker from "@/components/ATSChecker";
 import ApplicationLog from "@/components/ApplicationLog";
 import CustomisationPanel from "@/components/CustomisationPanel";
 import DraftsPanel from "@/components/DraftsPanel";
+import TemplateSwitcherStrip from "@/components/TemplateSwitcherStrip";
 
 import CoverLetterEditor from "@/components/CoverLetterEditor";
 import CoverLetterPreview from "@/components/CoverLetterPreview";
@@ -233,6 +234,9 @@ const Builder = () => {
           <TabsTrigger value="log" className="text-xs">Apps</TabsTrigger>
         </TabsList>
       </div>
+      {(activeTab === "editor" || activeTab === "cover") && (
+        <TemplateSwitcherStrip value={customisation} onChange={setCustomisation} />
+      )}
       <TabsContent value="editor" className="flex-1 overflow-hidden mt-0">
         <ScrollArea className="h-full">
           <CVEditor data={cvData} onChange={setCvData} />
