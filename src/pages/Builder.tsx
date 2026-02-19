@@ -143,9 +143,10 @@ const Builder = () => {
         const sidebarCol = flexRow?.querySelector<HTMLElement>(":scope > div:first-child");
         const mainCol = flexRow?.querySelector<HTMLElement>(":scope > div.flex-1") || flexRow?.querySelector<HTMLElement>(":scope > div:last-child");
 
-        // 1. Override aspect-ratio, width, and height so element renders at content height
+        // 1. Physically strip aspect-ratio from cssText (JS property overrides can be unreliable)
+        const savedCssText = cvShadow?.style.cssText || "";
         if (cvShadow) {
-          cvShadow.style.aspectRatio = "auto";
+          cvShadow.style.cssText = cvShadow.style.cssText.replace(/aspect-ratio\s*:[^;]+;?\s*/gi, "");
           cvShadow.style.width = "794px";
           cvShadow.style.maxWidth = "794px";
           cvShadow.style.height = "auto";
@@ -181,16 +182,13 @@ const Builder = () => {
         captureEl = cvShadow || hiddenDiv;
         cleanupFn = () => {
           hiddenDiv.style.display = "none";
-          // Reset all overrides
-          [cvShadow, flexRow, sidebarCol].forEach(el => {
+          // Restore original cssText + reset overrides
+          if (cvShadow) cvShadow.style.cssText = savedCssText;
+          [flexRow, sidebarCol].forEach(el => {
             if (!el) return;
             el.style.removeProperty("height");
             el.style.removeProperty("min-height");
-            el.style.removeProperty("overflow");
-            el.style.removeProperty("width");
-            el.style.removeProperty("max-width");
           });
-          if (cvShadow) cvShadow.style.aspectRatio = "210 / 297";
         };
       } else {
         // --- Standard clone approach for other templates ---
@@ -212,13 +210,13 @@ const Builder = () => {
         clone.style.left = "-9999px";
         clone.style.top = "0";
         clone.style.zIndex = "-1";
-        document.body.appendChild(clone);
-        // Override aspect-ratio & height constraints so clone shrinks to content
-        clone.style.aspectRatio = "auto";
+        // Physically strip aspect-ratio from cssText before appending
+        clone.style.cssText = clone.style.cssText.replace(/aspect-ratio\s*:[^;]+;?\s*/gi, "");
         clone.style.height = "auto";
         clone.style.minHeight = "0";
         clone.style.overflow = "visible";
-        void clone.offsetHeight; // force re-layout AFTER style corrections
+        document.body.appendChild(clone);
+        void clone.offsetHeight; // force layout
         // Lock to measured content height so html2canvas captures exactly this
         clone.style.height = `${clone.scrollHeight}px`;
 
@@ -229,10 +227,15 @@ const Builder = () => {
         };
       }
 
+      // Pass explicit dimensions so html2canvas captures exactly the content area
+      const captureW = captureEl.scrollWidth;
+      const captureH = captureEl.scrollHeight;
       const canvas = await html2canvas(captureEl, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
+        width: captureW,
+        height: captureH,
       });
 
       if (cleanupFn) cleanupFn();
