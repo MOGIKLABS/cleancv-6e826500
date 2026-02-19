@@ -37,12 +37,12 @@ const CoverLetterExecutive = ({ data, customisation: c, fullName, email, phone, 
       color: `hsl(${c.textColour})`,
       width: "210mm",
       minHeight: "297mm",
-      lineHeight: 1.6,
+      lineHeight: 1.45,
     }}
   >
     <div style={{ height: "4mm", backgroundColor: `hsl(${c.primaryColour})` }} />
-    <div style={{ padding: "22mm 25mm 20mm 25mm" }}>
-      <header className="flex items-start justify-between mb-6">
+    <div style={{ padding: "18mm 22mm 18mm 22mm" }}>
+      <header className="flex items-start justify-between mb-4">
         <div>
           <h1 style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 700 : 500, fontSize: `${c.fontSize * 2.2}pt`, letterSpacing: "-0.02em" }}>
             {fullName}
@@ -58,18 +58,18 @@ const CoverLetterExecutive = ({ data, customisation: c, fullName, email, phone, 
         </div>
       </header>
 
-      <div style={{ height: "1px", backgroundColor: `hsl(${c.primaryColour} / 0.3)`, marginBottom: "6mm" }} />
+      <div style={{ height: "1px", backgroundColor: `hsl(${c.primaryColour} / 0.3)`, marginBottom: "4mm" }} />
 
-      {data.date && <p className="mb-4">{formatDate(data.date)}</p>}
+      {data.date && <p className="mb-3">{formatDate(data.date)}</p>}
       {data.jobTitle && (
-        <p className="mb-4" style={{ fontWeight: c.headingBold ? 600 : 400, fontFamily: c.headingFont, color: `hsl(${c.primaryColour})`, textTransform: "uppercase", letterSpacing: "0.15em", fontSize: `${c.fontSize * 0.9}pt` }}>
+        <p className="mb-3" style={{ fontWeight: c.headingBold ? 600 : 400, fontFamily: c.headingFont, color: `hsl(${c.primaryColour})`, textTransform: "uppercase", letterSpacing: "0.15em", fontSize: `${c.fontSize * 0.9}pt` }}>
           Re: {data.jobTitle}
         </p>
       )}
-      {data.recipientName && <p className="mb-4">{data.recipientName}</p>}
+      {data.recipientName && <p className="mb-3">{data.recipientName}</p>}
 
       {data.body && (
-        <div className="mb-6 space-y-3" style={{ fontStyle: c.bodyItalic ? "italic" : "normal" }}>
+        <div className="mb-4 space-y-2" style={{ fontStyle: c.bodyItalic ? "italic" : "normal" }}>
           {data.body.split("\n\n").map((para, i) => <p key={i}>{para}</p>)}
         </div>
       )}

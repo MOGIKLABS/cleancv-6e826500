@@ -148,23 +148,36 @@ const Builder = () => {
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
 
+      // For cover letters, temporarily constrain max-height to force single-page fit
+      if (target === "cover") {
+        el.style.maxHeight = "297mm";
+        el.style.overflow = "hidden";
+      }
+
       const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
 
+      // Restore original styles
+      if (target === "cover") {
+        el.style.maxHeight = "";
+        el.style.overflow = "";
+      }
+
+      const MARGIN = 2; // mm safety margin each side
       const A4_W = 210;
       const A4_H = 297;
-      const imgW = A4_W;
-      const imgH = (canvas.height * A4_W) / canvas.width;
+      const contentW = A4_W - MARGIN * 2;
+      const imgH = (canvas.height * contentW) / canvas.width;
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const imgData = canvas.toDataURL("image/png");
 
       if (imgH <= A4_H) {
-        pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH);
+        pdf.addImage(imgData, "PNG", MARGIN, 0, contentW, imgH);
       } else {
         let y = 0;
         while (y < imgH) {
           if (y > 0) pdf.addPage();
-          pdf.addImage(imgData, "PNG", 0, -y, imgW, imgH);
+          pdf.addImage(imgData, "PNG", MARGIN, -y, contentW, imgH);
           y += A4_H;
         }
       }

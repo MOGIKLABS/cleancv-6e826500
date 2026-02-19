@@ -37,10 +37,10 @@ const CoverLetterModern = ({ data, customisation: c, fullName, email, phone, loc
       color: `hsl(${c.textColour})`,
       width: "210mm",
       minHeight: "297mm",
-      lineHeight: 1.6,
+      lineHeight: 1.45,
     }}
   >
-    <div className="text-white" style={{ backgroundColor: `hsl(${c.primaryColour})`, padding: "20mm 25mm 12mm 25mm" }}>
+    <div className="text-white" style={{ backgroundColor: `hsl(${c.primaryColour})`, padding: "18mm 22mm 10mm 22mm" }}>
       <h1 style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 700 : 500, fontSize: `${c.fontSize * 2}pt` }}>
         {fullName}
       </h1>
@@ -54,13 +54,13 @@ const CoverLetterModern = ({ data, customisation: c, fullName, email, phone, loc
       </div>
     </div>
 
-    <div style={{ padding: "15mm 25mm 20mm 25mm" }}>
-      {data.date && <p className="mb-4">{formatDate(data.date)}</p>}
-      {data.jobTitle && <p className="mb-4" style={{ fontWeight: c.headingBold ? 600 : 400 }}>Re: {data.jobTitle}</p>}
-      {data.recipientName && <p className="mb-4">{data.recipientName}</p>}
+    <div style={{ padding: "12mm 22mm 18mm 22mm" }}>
+      {data.date && <p className="mb-3">{formatDate(data.date)}</p>}
+      {data.jobTitle && <p className="mb-3" style={{ fontWeight: c.headingBold ? 600 : 400 }}>Re: {data.jobTitle}</p>}
+      {data.recipientName && <p className="mb-3">{data.recipientName}</p>}
 
       {data.body && (
-        <div className="mb-6 space-y-3" style={{ fontStyle: c.bodyItalic ? "italic" : "normal" }}>
+        <div className="mb-4 space-y-2" style={{ fontStyle: c.bodyItalic ? "italic" : "normal" }}>
           {data.body.split("\n\n").map((para, i) => <p key={i}>{para}</p>)}
         </div>
       )}
