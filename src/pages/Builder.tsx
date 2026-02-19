@@ -237,7 +237,7 @@ const Builder = () => {
       const contentW = A4_W;
       const imgH = (canvas.height * contentW) / canvas.width;
 
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: target === "cover" ? "a4" : [A4_W, Math.min(imgH, A4_H)] });
       const imgData = canvas.toDataURL("image/png");
 
       if (target === "cover" && imgH > A4_H) {
