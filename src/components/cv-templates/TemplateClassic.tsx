@@ -20,12 +20,10 @@ const TemplateClassic = ({ data, customisation }: Props) => {
   } as React.CSSProperties;
 
   return (
-    {/* Added print:min-h-[297mm] and print:shadow-none to force physical page height */}
     <div 
       className="cv-shadow overflow-hidden bg-white w-full max-w-[640px] mx-auto print:max-w-none print:min-h-[297mm] print:rounded-none print:shadow-none print:w-full print:m-0" 
       style={{ ...style, aspectRatio: "8.5/11" }}
     >
-      {/* Added print:min-h-[297mm] to the flex wrapper to guarantee column stretch */}
       <div className="flex h-full min-h-full print:min-h-[297mm]">
         
         {/* Sidebar */}
@@ -63,7 +61,6 @@ const TemplateClassic = ({ data, customisation }: Props) => {
               {personal.linkedin && (
                 <div className="flex items-start gap-2">
                   <Linkedin className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} />
-                  {/* Explicit absolute URLs guarantee PDF hit-boxes work */}
                   <a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" className="break-all underline hover:opacity-80">
                     {personal.linkedin.replace(/^https?:\/\//, '')}
                   </a>
@@ -72,7 +69,6 @@ const TemplateClassic = ({ data, customisation }: Props) => {
               {personal.github && (
                 <div className="flex items-start gap-2">
                   <Github className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} />
-                  {/* Explicit absolute URLs guarantee PDF hit-boxes work */}
                   <a href={personal.github.startsWith("http") ? personal.github : `https://${personal.github}`} target="_blank" rel="noopener noreferrer" className="break-all underline hover:opacity-80">
                     {personal.github.replace(/^https?:\/\//, '')}
                   </a>
