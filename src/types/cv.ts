@@ -36,8 +36,10 @@ export interface CoverLetterData {
   jobTitle: string; // auto-populated from ATS tab
   body: string; // the main letter content (max 500 words)
   signOff: string;
-  signatureMode: "image" | "draw";
-  signatureImage: string;
+  signatureImage: string; // base64 data URL (JPG/PNG) – used for signature or seal
+  signatureSize?: number; // size in mm (default 30)
+  signatureOffsetX?: number; // horizontal offset in mm (default 0)
+  signatureOffsetY?: number; // vertical offset in mm (default 0)
   // Optional overrides – when empty, CV data is used
   overrideFullName?: string;
   overrideEmail?: string;
@@ -45,11 +47,6 @@ export interface CoverLetterData {
   overrideLinkedin?: string;
   overrideGithub?: string;
   overrideLocation?: string;
-  // Seal / stamp image
-  sealImage?: string;       // base64 data URL (PNG)
-  sealSize?: number;        // size in mm (default 30)
-  sealOffsetX?: number;     // horizontal offset from right edge in mm (default 0)
-  sealOffsetY?: number;     // vertical offset from bottom of sign-off in mm (default 0)
 }
 
 export const defaultCoverLetterData: CoverLetterData = {
@@ -58,18 +55,16 @@ export const defaultCoverLetterData: CoverLetterData = {
   jobTitle: "",
   body: "",
   signOff: "Yours sincerely,",
-  signatureMode: "draw",
   signatureImage: "",
+  signatureSize: 30,
+  signatureOffsetX: 0,
+  signatureOffsetY: 0,
   overrideFullName: "",
   overrideEmail: "",
   overridePhone: "",
   overrideLinkedin: "",
   overrideGithub: "",
   overrideLocation: "",
-  sealImage: "",
-  sealSize: 30,
-  sealOffsetX: 0,
-  sealOffsetY: 0,
 };
 
 export type TemplateName = "classic" | "modern" | "minimal" | "creative" | "executive";
