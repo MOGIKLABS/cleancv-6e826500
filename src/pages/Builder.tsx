@@ -141,22 +141,40 @@ const Builder = () => {
         // Force layout so we can measure
         hiddenDiv.offsetHeight;
 
-        // Find the main content column and measure its height
+        // Remove aspect-ratio so content flows naturally, then measure
+        const cvShadow = hiddenDiv.querySelector<HTMLElement>(".cv-shadow");
+        if (cvShadow) {
+          cvShadow.style.aspectRatio = "unset";
+          cvShadow.style.height = "auto";
+        }
+        const flexRow = cvShadow?.querySelector<HTMLElement>(":scope > div");
+        if (flexRow) {
+          flexRow.style.height = "auto";
+          flexRow.style.minHeight = "0";
+        }
+
+        // Force layout to get natural content height
+        hiddenDiv.offsetHeight;
+
+        // Now measure the actual rendered height of both columns
         const mainCol = hiddenDiv.querySelector<HTMLElement>(".flex-1");
-        const sidebarCol = hiddenDiv.querySelector<HTMLElement>("[style*='align-self']");
-        if (mainCol && sidebarCol) {
-          const fullHeight = Math.max(mainCol.scrollHeight, sidebarCol.scrollHeight, hiddenDiv.scrollHeight);
-          // Set explicit height on the cv-shadow container so both columns fill it
-          const cvShadow = hiddenDiv.querySelector<HTMLElement>(".cv-shadow");
-          if (cvShadow) {
-            cvShadow.style.height = `${fullHeight}px`;
-            cvShadow.style.aspectRatio = "unset";
-          }
-          const flexRow = cvShadow?.querySelector<HTMLElement>(":scope > div");
-          if (flexRow) {
-            flexRow.style.height = `${fullHeight}px`;
-            flexRow.style.minHeight = `${fullHeight}px`;
-          }
+        const sidebarCol = flexRow?.querySelector<HTMLElement>(":scope > div:first-child");
+        const naturalHeight = Math.max(
+          mainCol?.scrollHeight || 0,
+          sidebarCol?.scrollHeight || 0,
+          cvShadow?.scrollHeight || 0
+        );
+
+        // Apply explicit height so sidebar stretches to match
+        if (cvShadow) {
+          cvShadow.style.height = `${naturalHeight}px`;
+        }
+        if (flexRow) {
+          flexRow.style.height = `${naturalHeight}px`;
+          flexRow.style.minHeight = `${naturalHeight}px`;
+        }
+        if (sidebarCol) {
+          sidebarCol.style.height = `${naturalHeight}px`;
         }
 
         // Force layout again after height adjustment
@@ -165,11 +183,12 @@ const Builder = () => {
         captureEl = hiddenDiv.querySelector<HTMLElement>(".cv-shadow") || hiddenDiv;
         cleanupFn = () => {
           hiddenDiv.style.display = "none";
-          // Reset explicit heights
           const cvShadow = hiddenDiv.querySelector<HTMLElement>(".cv-shadow");
           if (cvShadow) { cvShadow.style.height = ""; cvShadow.style.aspectRatio = ""; }
           const flexRow = cvShadow?.querySelector<HTMLElement>(":scope > div");
           if (flexRow) { flexRow.style.height = ""; flexRow.style.minHeight = ""; }
+          const sidebarCol = flexRow?.querySelector<HTMLElement>(":scope > div:first-child");
+          if (sidebarCol) { sidebarCol.style.height = ""; }
         };
       } else {
         // --- Standard clone approach for other templates ---
