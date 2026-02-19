@@ -138,57 +138,55 @@ const Builder = () => {
         hiddenDiv.style.display = "block";
         hiddenDiv.style.zIndex = "-1";
 
-        // Force layout so we can measure
-        hiddenDiv.offsetHeight;
-
-        // Remove aspect-ratio so content flows naturally, then measure
         const cvShadow = hiddenDiv.querySelector<HTMLElement>(".cv-shadow");
-        if (cvShadow) {
-          cvShadow.style.aspectRatio = "unset";
-          cvShadow.style.height = "auto";
-        }
         const flexRow = cvShadow?.querySelector<HTMLElement>(":scope > div");
+        const sidebarCol = flexRow?.querySelector<HTMLElement>(":scope > div:first-child");
+        const mainCol = flexRow?.querySelector<HTMLElement>(":scope > div.flex-1") || flexRow?.querySelector<HTMLElement>(":scope > div:last-child");
+
+        // 1. Remove aspect-ratio & override Tailwind h-full with !important
+        if (cvShadow) {
+          cvShadow.style.setProperty("aspect-ratio", "unset", "important");
+          cvShadow.style.setProperty("height", "auto", "important");
+          cvShadow.style.setProperty("overflow", "visible", "important");
+        }
         if (flexRow) {
-          flexRow.style.height = "auto";
-          flexRow.style.minHeight = "0";
+          flexRow.style.setProperty("height", "auto", "important");
+          flexRow.style.setProperty("min-height", "0", "important");
         }
 
-        // Force layout to get natural content height
+        // 2. Force layout so columns render at natural height
         hiddenDiv.offsetHeight;
 
-        // Now measure the actual rendered height of both columns
-        const mainCol = hiddenDiv.querySelector<HTMLElement>(".flex-1");
-        const sidebarCol = flexRow?.querySelector<HTMLElement>(":scope > div:first-child");
-        const naturalHeight = Math.max(
-          mainCol?.scrollHeight || 0,
-          sidebarCol?.scrollHeight || 0,
-          cvShadow?.scrollHeight || 0
-        );
+        // 3. Measure the taller column
+        const mainH = mainCol?.scrollHeight || 0;
+        const sideH = sidebarCol?.scrollHeight || 0;
+        const fullHeight = Math.max(mainH, sideH);
 
-        // Apply explicit height so sidebar stretches to match
-        if (cvShadow) {
-          cvShadow.style.height = `${naturalHeight}px`;
-        }
+        // 4. Set explicit pixel heights on everything
+        if (cvShadow) cvShadow.style.setProperty("height", `${fullHeight}px`, "important");
         if (flexRow) {
-          flexRow.style.height = `${naturalHeight}px`;
-          flexRow.style.minHeight = `${naturalHeight}px`;
+          flexRow.style.setProperty("height", `${fullHeight}px`, "important");
+          flexRow.style.setProperty("min-height", `${fullHeight}px`, "important");
         }
         if (sidebarCol) {
-          sidebarCol.style.height = `${naturalHeight}px`;
+          sidebarCol.style.setProperty("height", `${fullHeight}px`, "important");
+          sidebarCol.style.setProperty("min-height", `${fullHeight}px`, "important");
         }
 
-        // Force layout again after height adjustment
+        // 5. Force layout again
         hiddenDiv.offsetHeight;
 
-        captureEl = hiddenDiv.querySelector<HTMLElement>(".cv-shadow") || hiddenDiv;
+        captureEl = cvShadow || hiddenDiv;
         cleanupFn = () => {
           hiddenDiv.style.display = "none";
-          const cvShadow = hiddenDiv.querySelector<HTMLElement>(".cv-shadow");
-          if (cvShadow) { cvShadow.style.height = ""; cvShadow.style.aspectRatio = ""; }
-          const flexRow = cvShadow?.querySelector<HTMLElement>(":scope > div");
-          if (flexRow) { flexRow.style.height = ""; flexRow.style.minHeight = ""; }
-          const sidebarCol = flexRow?.querySelector<HTMLElement>(":scope > div:first-child");
-          if (sidebarCol) { sidebarCol.style.height = ""; }
+          // Reset all overrides
+          [cvShadow, flexRow, sidebarCol].forEach(el => {
+            if (!el) return;
+            el.style.removeProperty("height");
+            el.style.removeProperty("min-height");
+            el.style.removeProperty("aspect-ratio");
+            el.style.removeProperty("overflow");
+          });
         };
       } else {
         // --- Standard clone approach for other templates ---
