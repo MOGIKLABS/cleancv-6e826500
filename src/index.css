@@ -198,8 +198,8 @@
 .one-page-mode [class*="pt-5"] { padding-top: 6px !important; }
 
 /* =========================================
-   NUCLEAR PRINT RESET v5 
-   (The Flexbox Print-Bug Assassin)
+   NUCLEAR PRINT RESET v6
+   (Strict Absolute Height Override)
    ========================================= */
 @media print {
   @page {
@@ -208,16 +208,15 @@
   }
 
   html, body, #root {
-    height: auto !important;
+    height: 297mm !important; /* Strict height lock */
+    width: 210mm !important;
     margin: 0 !important;
     padding: 0 !important;
-    width: 100% !important;
     background: white !important;
-    -webkit-print-color-adjust: exact !important; 
+    -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Kills the 60% lock */
   * {
     transform: none !important;
     transition: none !important;
@@ -226,35 +225,38 @@
     print-color-adjust: exact !important;
   }
 
-  /* GUARANTEES LINKS STAY ALIVE IN PDF */
   a {
     text-decoration: none !important;
     color: inherit !important;
     display: inline !important;
-    pointer-events: auto !important; 
+    pointer-events: auto !important;
   }
 
-  /* THE ULTIMATE HEIGHT FIX
-     1. Forces the outer wrapper to A4 height
-     2. Forces the inner flex container to A4 height
-     3. Forces the individual columns (the sidebar and main body) to A4 height 
+  /* The fix: We MUST use 'height: 297mm'. 
+    If we use 'min-height', Chrome ignores it and shrinks the sidebar. 
   */
   .cv-shadow {
-    min-height: 297mm !important; 
-    width: 210mm !important; 
-    margin: 0 auto !important;
+    height: 297mm !important; /* Strict lock */
+    width: 210mm !important;
+    margin: 0 !important;
     padding: 0 !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: hidden !important; /* Forces it to exactly 1 page */
   }
 
-  .cv-shadow > div, 
+  /* Force the flex wrapper to exactly A4 height */
+  .cv-shadow > div {
+    display: flex !important;
+    height: 297mm !important; /* Strict lock */
+    align-items: stretch !important;
+  }
+
+  /* Force BOTH the sidebar and main column to strictly inherit the 297mm height */
   .cv-shadow > div > div {
-    min-height: 297mm !important;
-    height: 100% !important;
+    height: 297mm !important; /* Strict lock */
   }
 
-  /* Hide web-only UI elements */
   .no-print, nav, button, aside, header {
     display: none !important;
   }
