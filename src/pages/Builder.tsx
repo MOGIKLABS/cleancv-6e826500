@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, ArrowLeft, Loader2, Eye, PenLine, Save, Check, FileDown, Maximize, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import DraftsPanel from "@/components/DraftsPanel";
 import TemplateSwitcherStrip from "@/components/TemplateSwitcherStrip";
 
 import CoverLetterEditor from "@/components/CoverLetterEditor";
+import { TemplateClassic } from "@/components/cv-templates";
 import CoverLetterPreview from "@/components/CoverLetterPreview";
 import { CVData, CVCustomisation, CoverLetterData, defaultCVData, defaultCustomisation, defaultCoverLetterData } from "@/types/cv";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +51,8 @@ const Builder = () => {
   const [onePage, setOnePage] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [drafts, setDrafts] = useState<DraftData[]>(() => loadAllDrafts());
+
+  const classicExportRef = useRef<HTMLDivElement>(null);
 
   const saveDraft = useCallback(() => {
     // Preserve existing custom label if one was set via rename
@@ -117,60 +120,94 @@ const Builder = () => {
   const handleExportPdf = async (target: "cv" | "cover" = "cv") => {
     setExporting(true);
     try {
-      const elId = target === "cover" ? "cover-letter-preview" : "cv-preview";
-      const wrapper = document.getElementById(elId);
-      if (!wrapper) {
-        toast.error(`No ${target === "cover" ? "cover letter" : "CV"} preview found.`);
-        return;
-      }
-
-      // Target the actual template content element (.cv-shadow) for reliable capture
-      const el = wrapper.querySelector<HTMLElement>(".cv-shadow") || wrapper;
-
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
 
-      // Add page-break-inside: avoid to signature blocks before capture
-      const sigBlocks = el.querySelectorAll<HTMLElement>(".signature-block");
-      sigBlocks.forEach((b) => { b.style.pageBreakInside = "avoid"; b.style.breakInside = "avoid"; });
+      let captureEl: HTMLElement;
+      let cleanupFn: (() => void) | null = null;
 
-      // Create an offscreen clone at A4 width for consistent capture
-      const clone = el.cloneNode(true) as HTMLElement;
-      clone.style.width = "794px"; // 210mm at 96dpi
-      clone.style.maxWidth = "794px";
-      clone.style.position = "absolute";
-      clone.style.left = "-9999px";
-      clone.style.top = "0";
-      clone.style.zIndex = "-1";
+      const isClassicCv = target === "cv" && customisation.template === "classic";
 
-      // Ensure flex stretch is preserved on the cloned sidebar
-      const cloneFlex = clone.querySelector<HTMLElement>(":scope > div");
-      if (cloneFlex) {
-        cloneFlex.style.display = "flex";
-        cloneFlex.style.minHeight = "100%";
+      if (isClassicCv && classicExportRef.current) {
+        // --- Fresh-render approach for Classic template ---
+        const hiddenDiv = classicExportRef.current;
+        hiddenDiv.style.width = "794px";
+        hiddenDiv.style.position = "absolute";
+        hiddenDiv.style.left = "-9999px";
+        hiddenDiv.style.top = "0";
+        hiddenDiv.style.display = "block";
+        hiddenDiv.style.zIndex = "-1";
+
+        // Force layout so we can measure
+        hiddenDiv.offsetHeight;
+
+        // Find the main content column and measure its height
+        const mainCol = hiddenDiv.querySelector<HTMLElement>(".flex-1");
+        const sidebarCol = hiddenDiv.querySelector<HTMLElement>("[style*='align-self']");
+        if (mainCol && sidebarCol) {
+          const fullHeight = Math.max(mainCol.scrollHeight, sidebarCol.scrollHeight, hiddenDiv.scrollHeight);
+          // Set explicit height on the cv-shadow container so both columns fill it
+          const cvShadow = hiddenDiv.querySelector<HTMLElement>(".cv-shadow");
+          if (cvShadow) {
+            cvShadow.style.height = `${fullHeight}px`;
+            cvShadow.style.aspectRatio = "unset";
+          }
+          const flexRow = cvShadow?.querySelector<HTMLElement>(":scope > div");
+          if (flexRow) {
+            flexRow.style.height = `${fullHeight}px`;
+            flexRow.style.minHeight = `${fullHeight}px`;
+          }
+        }
+
+        // Force layout again after height adjustment
+        hiddenDiv.offsetHeight;
+
+        captureEl = hiddenDiv.querySelector<HTMLElement>(".cv-shadow") || hiddenDiv;
+        cleanupFn = () => {
+          hiddenDiv.style.display = "none";
+          // Reset explicit heights
+          const cvShadow = hiddenDiv.querySelector<HTMLElement>(".cv-shadow");
+          if (cvShadow) { cvShadow.style.height = ""; cvShadow.style.aspectRatio = ""; }
+          const flexRow = cvShadow?.querySelector<HTMLElement>(":scope > div");
+          if (flexRow) { flexRow.style.height = ""; flexRow.style.minHeight = ""; }
+        };
+      } else {
+        // --- Standard clone approach for other templates ---
+        const elId = target === "cover" ? "cover-letter-preview" : "cv-preview";
+        const wrapper = document.getElementById(elId);
+        if (!wrapper) {
+          toast.error(`No ${target === "cover" ? "cover letter" : "CV"} preview found.`);
+          return;
+        }
+        const el = wrapper.querySelector<HTMLElement>(".cv-shadow") || wrapper;
+
+        const sigBlocks = el.querySelectorAll<HTMLElement>(".signature-block");
+        sigBlocks.forEach((b) => { b.style.pageBreakInside = "avoid"; b.style.breakInside = "avoid"; });
+
+        const clone = el.cloneNode(true) as HTMLElement;
+        clone.style.width = "794px";
+        clone.style.maxWidth = "794px";
+        clone.style.position = "absolute";
+        clone.style.left = "-9999px";
+        clone.style.top = "0";
+        clone.style.zIndex = "-1";
+        document.body.appendChild(clone);
+        clone.offsetHeight;
+
+        captureEl = clone;
+        cleanupFn = () => {
+          document.body.removeChild(clone);
+          sigBlocks.forEach((b) => { b.style.pageBreakInside = ""; b.style.breakInside = ""; });
+        };
       }
-      const cloneSidebar = clone.querySelector<HTMLElement>(":scope > div > div:first-child");
-      if (cloneSidebar) {
-        cloneSidebar.style.alignSelf = "stretch";
-        cloneSidebar.style.minHeight = "100%";
-      }
 
-      document.body.appendChild(clone);
-
-      // Force layout
-      clone.offsetHeight;
-
-      const canvas = await html2canvas(clone, {
+      const canvas = await html2canvas(captureEl, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
       });
 
-      // Clean up clone
-      document.body.removeChild(clone);
-
-      // Restore signature blocks
-      sigBlocks.forEach((b) => { b.style.pageBreakInside = ""; b.style.breakInside = ""; });
+      if (cleanupFn) cleanupFn();
 
       if (canvas.width === 0 || canvas.height === 0) {
         toast.error("Could not capture CV preview. Please try again.");
@@ -382,6 +419,15 @@ const Builder = () => {
             Preview
           </button>
         </div>
+      </div>
+
+      {/* Hidden offscreen Classic template for PDF export — avoids clone inheritance issues */}
+      <div
+        ref={classicExportRef}
+        style={{ display: "none", position: "absolute", left: "-9999px", top: 0, width: "794px", zIndex: -1 }}
+        className={onePage ? "one-page-mode" : ""}
+      >
+        <TemplateClassic data={cvData} customisation={customisation} />
       </div>
     </div>
   );
