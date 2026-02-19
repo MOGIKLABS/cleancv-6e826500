@@ -16,7 +16,6 @@ import CoverLetterEditor from "@/components/CoverLetterEditor";
 import { TemplateClassic } from "@/components/cv-templates";
 import CoverLetterPreview from "@/components/CoverLetterPreview";
 import { CVData, CVCustomisation, CoverLetterData, defaultCVData, defaultCustomisation, defaultCoverLetterData } from "@/types/cv";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   DraftData,
@@ -25,7 +24,6 @@ import {
   loadAllDrafts,
   saveDraftToHistory,
   renameDraftInHistory,
-  exportDraftAsJSON,
 } from "@/lib/drafts";
 
 const Builder = () => {
@@ -109,8 +107,7 @@ const Builder = () => {
     return `${label}-${prefix}-${date}.pdf`;
   };
 
-  // --- THE ATS KILLER HAS BEEN REMOVED ---
-  // Native print to PDF guarantees 100% vector text and perfectly readable ATS parsers
+  // --- NATIVE PRINT EXPORT (100% ATS Friendly & Clickable Links) ---
   const handleExportPdf = (target: "cv" | "cover" = "cv") => {
     setExporting(true);
     
@@ -121,13 +118,15 @@ const Builder = () => {
       setActiveTab("editor");
     }
 
-    // Give React 150ms to render the tab, then print
+    // Give React 150ms to render the tab, then trigger native print
     setTimeout(() => {
       const originalTitle = document.title;
+      // This sets the default file name when the user clicks 'Save as PDF'
       document.title = getExportFilename(target === "cover" ? "CoverLetter" : "CV").replace('.pdf', ''); 
       
       window.print();
       
+      // Restore original site title after printing
       document.title = originalTitle;
       setExporting(false);
       toast.success("PDF dialogue opened. Be sure to select 'Save as PDF'!");
