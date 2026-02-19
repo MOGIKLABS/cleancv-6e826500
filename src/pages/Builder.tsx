@@ -151,15 +151,18 @@ const Builder = () => {
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const imgData = canvas.toDataURL("image/png");
 
-      if (target === "cover" && imgH > A4_H) {
-        // Scale the entire cover letter to fit one page
+      const isOnePage = target === "cv" && el.closest(".one-page-mode") !== null;
+
+      if ((target === "cover" || isOnePage) && imgH > A4_H) {
+        // Scale the entire content to fit one page
         const fitScale = A4_H / imgH;
         const scaledW = contentW * fitScale;
         const scaledH = A4_H;
-        const offsetX = MARGIN_X + (contentW - scaledW) / 2; // center horizontally
+        const offsetX = MARGIN_X + (contentW - scaledW) / 2;
         pdf.addImage(imgData, "PNG", offsetX, 0, scaledW, scaledH);
-      } else if (imgH <= A4_H) {
-        pdf.addImage(imgData, "PNG", MARGIN_X, 0, contentW, imgH);
+      } else if (imgH <= A4_H + 2) {
+        // Fit content that's within 2mm of A4 height without adding a second page
+        pdf.addImage(imgData, "PNG", MARGIN_X, 0, contentW, Math.min(imgH, A4_H));
       } else {
         let y = 0;
         while (y < imgH) {
