@@ -52,7 +52,7 @@ const TemplateClassic = ({ data, customisation }: Props) => {
             <h3 className="text-[9px] uppercase tracking-widest font-semibold mb-2" style={{ color: `hsl(${c.primaryColour})` }}>Skills</h3>
             <div className="flex flex-wrap gap-1">
               {skills.map((skill) => (
-                <span key={skill} className="inline-block rounded px-1.5 py-0.5 text-[8px]" style={{ backgroundColor: `hsl(${c.primaryColour} / 0.15)`, color: `hsl(${c.primaryColour})` }}>
+                <span key={skill} className="inline-block rounded px-1.5 py-0.5 text-[8px]" style={{ backgroundColor: `hsl(${c.primaryColour} / 0.2)`, color: "white" }}>
                   {skill}
                 </span>
               ))}
