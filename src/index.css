@@ -198,8 +198,8 @@
 .one-page-mode [class*="pt-5"] { padding-top: 6px !important; }
 
 /* =========================================
-   NUCLEAR PRINT RESET v3 
-   (Fixes Classic Margins, ATS Text & Clickable Links)
+   NUCLEAR PRINT RESET v4 
+   (Universal Template Stretch & ATS Links)
    ========================================= */
 @media print {
   @page {
@@ -209,13 +209,10 @@
 
   html, body, #root {
     height: auto !important;
-    min-height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
     background: white !important;
-    overflow: visible !important;
-    /* Forces background colors to print so the sidebar doesn't disappear */
     -webkit-print-color-adjust: exact !important; 
     print-color-adjust: exact !important;
   }
@@ -229,9 +226,7 @@
     print-color-adjust: exact !important;
   }
 
-  /* GUARANTEES LINKS STAY ALIVE IN PDF 
-   (Forces the browser to recognize them as clickable hit-boxes)
-  */
+  /* GUARANTEES LINKS STAY ALIVE IN PDF */
   a {
     text-decoration: none !important;
     color: inherit !important;
@@ -239,23 +234,26 @@
     pointer-events: auto !important; 
   }
 
-  /* FIXES THE CLASSIC TEMPLATE WHITE MARGIN 
-   Forces the columns to stretch the full A4 height (297mm)
+  /* UNIVERSAL TEMPLATE HEIGHT FIX 
+     This targets ALL templates via the .cv-shadow class 
+     and forces them to exactly fill one A4 page.
   */
-  .one-page-mode, 
-  #cv-preview, 
   .cv-shadow {
-    width: 100% !important;
-    min-height: 297mm !important; 
-    max-height: none !important;
-    max-width: none !important;
-    overflow: visible !important;
-    margin: 0 !important;
+    height: 297mm !important; /* Hardcodes the exact height of A4 paper */
+    width: 210mm !important;  /* Hardcodes the exact width */
+    margin: 0 auto !important;
     padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important; /* Prevents tiny pixel spills from creating a blank page 2 */
+  }
+
+  /* Forces the inner wrapper of EVERY template to inherit the 297mm height */
+  .cv-shadow > div {
+    height: 100% !important;
+    min-height: 297mm !important;
   }
 
   /* Hide web-only UI elements */
   .no-print, nav, button, aside, header {
     display: none !important;
   }
-}
