@@ -118,11 +118,14 @@ const Builder = () => {
     setExporting(true);
     try {
       const elId = target === "cover" ? "cover-letter-preview" : "cv-preview";
-      const el = document.getElementById(elId);
-      if (!el) {
+      const wrapper = document.getElementById(elId);
+      if (!wrapper) {
         toast.error(`No ${target === "cover" ? "cover letter" : "CV"} preview found.`);
         return;
       }
+
+      // Target the actual template content element (.cv-shadow) for reliable capture
+      const el = wrapper.querySelector<HTMLElement>(".cv-shadow") || wrapper;
 
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
@@ -131,19 +134,38 @@ const Builder = () => {
       const sigBlocks = el.querySelectorAll<HTMLElement>(".signature-block");
       sigBlocks.forEach((b) => { b.style.pageBreakInside = "avoid"; b.style.breakInside = "avoid"; });
 
-      const canvas = await html2canvas(el, {
+      // Create an offscreen clone at A4 width for consistent capture
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.style.width = "794px"; // 210mm at 96dpi
+      clone.style.maxWidth = "794px";
+      clone.style.position = "absolute";
+      clone.style.left = "-9999px";
+      clone.style.top = "0";
+      clone.style.zIndex = "-1";
+      document.body.appendChild(clone);
+
+      // Force layout
+      clone.offsetHeight;
+
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
-        windowWidth: el.scrollWidth,
       });
 
-      // Restore
+      // Clean up clone
+      document.body.removeChild(clone);
+
+      // Restore signature blocks
       sigBlocks.forEach((b) => { b.style.pageBreakInside = ""; b.style.breakInside = ""; });
+
+      if (canvas.width === 0 || canvas.height === 0) {
+        toast.error("Could not capture CV preview. Please try again.");
+        return;
+      }
 
       const A4_W = 210;
       const A4_H = 297;
-      // Templates already include their own padding (20-22mm), so no extra PDF margin needed
       const MARGIN_X = 0;
       const contentW = A4_W;
       const imgH = (canvas.height * contentW) / canvas.width;
