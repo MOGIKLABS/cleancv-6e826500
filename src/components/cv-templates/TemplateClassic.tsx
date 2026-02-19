@@ -20,10 +20,19 @@ const TemplateClassic = ({ data, customisation }: Props) => {
   } as React.CSSProperties;
 
   return (
-    <div className="cv-shadow rounded-lg overflow-hidden bg-white w-full max-w-[640px] mx-auto" style={{ ...style, aspectRatio: "8.5/11" }}>
-      <div className="flex h-full" style={{ minHeight: "100%" }}>
-        {/* Sidebar — uses self-stretch + own bg so it always matches the taller column */}
-        <div className="w-[38%] p-5 flex flex-col gap-4 text-white/90" style={{ backgroundColor: `hsl(${c.sidebarColour})`, alignSelf: "stretch" }}>
+    {/* Added print:min-h-[297mm] and print:shadow-none to force physical page height */}
+    <div 
+      className="cv-shadow overflow-hidden bg-white w-full max-w-[640px] mx-auto print:max-w-none print:min-h-[297mm] print:rounded-none print:shadow-none print:w-full print:m-0" 
+      style={{ ...style, aspectRatio: "8.5/11" }}
+    >
+      {/* Added print:min-h-[297mm] to the flex wrapper to guarantee column stretch */}
+      <div className="flex h-full min-h-full print:min-h-[297mm]">
+        
+        {/* Sidebar */}
+        <div 
+          className="w-[38%] p-5 flex flex-col gap-4 text-white/90" 
+          style={{ backgroundColor: `hsl(${c.sidebarColour})`, alignSelf: "stretch" }}
+        >
           {/* Photo / Initials */}
           <div className="w-24 h-24 rounded-full border-2 mx-auto flex items-center justify-center overflow-hidden" style={{ borderColor: `hsl(${c.primaryColour})` }}>
             {personal.photo ? (
@@ -39,11 +48,36 @@ const TemplateClassic = ({ data, customisation }: Props) => {
           <div>
             <h3 className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: `hsl(${c.primaryColour})` }}>Contact</h3>
             <div className="space-y-2 text-[10px]">
-              <div className="flex items-start gap-2"><Mail className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} /><a href={`mailto:${personal.email}`} className="break-all underline">{personal.email}</a></div>
-              <div className="flex items-start gap-2"><Smartphone className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} /><span>{personal.phone}</span></div>
-              <div className="flex items-start gap-2"><MapPin className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} /><span>{personal.location}</span></div>
-              {personal.linkedin && <div className="flex items-start gap-2"><Linkedin className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} /><a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" className="break-all underline">{personal.linkedin}</a></div>}
-              {personal.github && <div className="flex items-start gap-2"><Github className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} /><a href={personal.github.startsWith("http") ? personal.github : `https://${personal.github}`} target="_blank" rel="noopener noreferrer" className="break-all underline">{personal.github}</a></div>}
+              <div className="flex items-start gap-2">
+                <Mail className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} />
+                <a href={`mailto:${personal.email}`} className="break-all underline hover:opacity-80">{personal.email}</a>
+              </div>
+              <div className="flex items-start gap-2">
+                <Smartphone className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} />
+                <span>{personal.phone}</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <MapPin className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} />
+                <span>{personal.location}</span>
+              </div>
+              {personal.linkedin && (
+                <div className="flex items-start gap-2">
+                  <Linkedin className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} />
+                  {/* Explicit absolute URLs guarantee PDF hit-boxes work */}
+                  <a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" className="break-all underline hover:opacity-80">
+                    {personal.linkedin.replace(/^https?:\/\//, '')}
+                  </a>
+                </div>
+              )}
+              {personal.github && (
+                <div className="flex items-start gap-2">
+                  <Github className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} />
+                  {/* Explicit absolute URLs guarantee PDF hit-boxes work */}
+                  <a href={personal.github.startsWith("http") ? personal.github : `https://${personal.github}`} target="_blank" rel="noopener noreferrer" className="break-all underline hover:opacity-80">
+                    {personal.github.replace(/^https?:\/\//, '')}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 
@@ -72,7 +106,7 @@ const TemplateClassic = ({ data, customisation }: Props) => {
           </div>
         </div>
 
-        {/* Main */}
+        {/* Main Content */}
         <div className="flex-1 p-5" style={{ color: `hsl(${c.textColour})` }}>
           <div className="mb-4 border-b pb-3" style={{ borderColor: `hsl(${c.textColour} / 0.15)` }}>
             <h1 className="text-xl leading-tight" style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 700 : 500 }}>
