@@ -198,7 +198,8 @@
 .one-page-mode [class*="pt-5"] { padding-top: 6px !important; }
 
 /* =========================================
-   NUCLEAR PRINT RESET (Fixes PDF Margins, Links & 60% Zoom)
+   NUCLEAR PRINT RESET v3 
+   (Fixes Classic Margins, ATS Text & Clickable Links)
    ========================================= */
 @media print {
   @page {
@@ -206,7 +207,6 @@
     size: A4;
   }
 
-  /* 1. Kills the 2rem padding squeezing your document */
   html, body, #root {
     height: auto !important;
     min-height: auto !important;
@@ -215,24 +215,38 @@
     width: 100% !important;
     background: white !important;
     overflow: visible !important;
+    /* Forces background colors to print so the sidebar doesn't disappear */
+    -webkit-print-color-adjust: exact !important; 
+    print-color-adjust: exact !important;
   }
 
-  /* 2. FORCES the 60% zoom to revert to 100% and re-attaches link hitboxes */
+  /* Kills the 60% lock */
   * {
     transform: none !important;
     transition: none !important;
     animation: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
+  /* GUARANTEES LINKS STAY ALIVE IN PDF 
+   (Forces the browser to recognize them as clickable hit-boxes)
+  */
   a {
     text-decoration: none !important;
     color: inherit !important;
     display: inline !important;
+    pointer-events: auto !important; 
   }
 
-  /* 3. Let the content flow naturally, overriding the UI scaling */
-  .one-page-mode, #cv-preview, .cv-shadow {
+  /* FIXES THE CLASSIC TEMPLATE WHITE MARGIN 
+   Forces the columns to stretch the full A4 height (297mm)
+  */
+  .one-page-mode, 
+  #cv-preview, 
+  .cv-shadow {
     width: 100% !important;
+    min-height: 297mm !important; 
     max-height: none !important;
     max-width: none !important;
     overflow: visible !important;
@@ -240,8 +254,8 @@
     padding: 0 !important;
   }
 
-  /* 4. Hide web-only UI elements */
-  .no-print, nav, button, aside {
+  /* Hide web-only UI elements */
+  .no-print, nav, button, aside, header {
     display: none !important;
   }
 }
