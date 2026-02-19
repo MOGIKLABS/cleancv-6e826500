@@ -253,6 +253,10 @@ const Builder = () => {
 
   return (
     <div className="flex h-screen flex-col bg-background">
+      {/* Beta banner */}
+      <div className="bg-primary/10 text-primary text-center text-xs py-1.5 px-4 font-medium tracking-wide border-b border-primary/20">
+        CleanCV is currently in beta — some features under construction.
+      </div>
       {/* Top bar */}
       <header className="flex h-14 items-center justify-between border-b border-border bg-card px-3 sm:px-4 gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
