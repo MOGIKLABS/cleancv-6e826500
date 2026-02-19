@@ -3,9 +3,7 @@ import { CoverLetterData, CVData, CVCustomisation } from "@/types/cv";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Mail, Sparkles, Loader2, Upload, ImageIcon, PenLine, Stamp, Trash2 } from "lucide-react";
-import SignatureCanvas from "@/components/SignatureCanvas";
+import { Mail, Sparkles, Loader2, Upload, ImageIcon, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BulletTextarea from "@/components/BulletTextarea";
@@ -48,8 +46,8 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
   const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file.");
+    if (!file.type.startsWith("image/jpeg") && !file.type.startsWith("image/png") && file.type !== "image/jpg") {
+      toast.error("Please upload a JPG or PNG file.");
       return;
     }
     const reader = new FileReader();
@@ -131,7 +129,7 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
         <Input type="date" value={data.date} onChange={(e) => update({ date: e.target.value })} />
       </div>
 
-      {/* Job title (auto from ATS or manual) */}
+      {/* Job title */}
       <div>
         <Label className="text-xs text-muted-foreground">Re: Job Title / Role</Label>
         <Input
@@ -176,97 +174,63 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
         <Input value={data.signOff} onChange={(e) => update({ signOff: e.target.value })} placeholder="Yours sincerely," />
       </div>
 
-      {/* Signature mode toggle */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs text-muted-foreground">Signature</Label>
-          <div className="flex items-center gap-2">
-            <PenLine className="h-3.5 w-3.5 text-muted-foreground" />
-            <Switch
-              checked={data.signatureMode === "image"}
-              onCheckedChange={(checked) => update({ signatureMode: checked ? "image" : "draw", signatureImage: "" })}
-            />
-            <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
-          </div>
-        </div>
-
-        {data.signatureMode === "draw" ? (
-          <SignatureCanvas value={data.signatureImage} onChange={(v) => update({ signatureImage: v })} />
-        ) : (
-          <div className="space-y-2">
-            {data.signatureImage && (
-              <img src={data.signatureImage} alt="Signature" className="h-16 object-contain rounded border border-border bg-background p-1" />
-            )}
-            <label className="cursor-pointer">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs" asChild>
-                <span>
-                  <Upload className="h-3.5 w-3.5" />
-                  Upload Signature Image
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleSignatureUpload} />
-                </span>
-              </Button>
-            </label>
-          </div>
-        )}
-      </div>
-
-      {/* Seal / Stamp upload */}
+      {/* Signature upload with size/offset controls */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Stamp className="h-4 w-4 text-primary" />
-          <Label className="text-xs text-muted-foreground">Seal / Stamp (PNG)</Label>
+          <ImageIcon className="h-4 w-4 text-primary" />
+          <Label className="text-xs text-muted-foreground">Signature (JPG / PNG)</Label>
         </div>
 
-        {data.sealImage ? (
+        {data.signatureImage ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <img
-                src={data.sealImage}
-                alt="Seal"
-                className="h-20 w-20 object-contain rounded border border-border bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)_0_0/16px_16px] p-1"
+                src={data.signatureImage}
+                alt="Signature"
+                className="h-16 object-contain rounded border border-border bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)_0_0/16px_16px] p-1"
               />
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-destructive"
-                onClick={() => update({ sealImage: "" })}
+                onClick={() => update({ signatureImage: "" })}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
 
             <div>
-              <Label className="text-[10px] text-muted-foreground">Size ({data.sealSize ?? 30}mm)</Label>
+              <Label className="text-[10px] text-muted-foreground">Size ({data.signatureSize ?? 30}mm)</Label>
               <Slider
-                min={15}
+                min={10}
                 max={60}
                 step={1}
-                value={[data.sealSize ?? 30]}
-                onValueChange={([v]) => update({ sealSize: v })}
+                value={[data.signatureSize ?? 30]}
+                onValueChange={([v]) => update({ signatureSize: v })}
                 className="mt-1"
               />
             </div>
 
             <div>
-              <Label className="text-[10px] text-muted-foreground">Horizontal offset ({data.sealOffsetX ?? 0}mm)</Label>
+              <Label className="text-[10px] text-muted-foreground">Horizontal offset ({data.signatureOffsetX ?? 0}mm)</Label>
               <Slider
                 min={-50}
                 max={100}
                 step={1}
-                value={[data.sealOffsetX ?? 0]}
-                onValueChange={([v]) => update({ sealOffsetX: v })}
+                value={[data.signatureOffsetX ?? 0]}
+                onValueChange={([v]) => update({ signatureOffsetX: v })}
                 className="mt-1"
               />
             </div>
 
             <div>
-              <Label className="text-[10px] text-muted-foreground">Vertical offset ({data.sealOffsetY ?? 0}mm)</Label>
+              <Label className="text-[10px] text-muted-foreground">Vertical offset ({data.signatureOffsetY ?? 0}mm)</Label>
               <Slider
                 min={-30}
                 max={30}
                 step={1}
-                value={[data.sealOffsetY ?? 0]}
-                onValueChange={([v]) => update({ sealOffsetY: v })}
+                value={[data.signatureOffsetY ?? 0]}
+                onValueChange={([v]) => update({ signatureOffsetY: v })}
                 className="mt-1"
               />
             </div>
@@ -276,32 +240,13 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
             <Button variant="outline" size="sm" className="gap-1.5 text-xs" asChild>
               <span>
                 <Upload className="h-3.5 w-3.5" />
-                Upload Seal Image
-                <input
-                  type="file"
-                  accept="image/png"
-                  className="sr-only"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (file.type !== "image/png") {
-                      toast.error("Please upload a PNG file.");
-                      return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      if (typeof reader.result === "string") {
-                        update({ sealImage: reader.result });
-                      }
-                    };
-                    reader.readAsDataURL(file);
-                  }}
-                />
+                Upload Signature Image
+                <input type="file" accept="image/png,image/jpeg" className="sr-only" onChange={handleSignatureUpload} />
               </span>
             </Button>
           </label>
         )}
-        <p className="text-[10px] text-muted-foreground">Supports PNG with transparent or white background.</p>
+        <p className="text-[10px] text-muted-foreground">Supports JPG and PNG. Works for signatures, seals, or stamps.</p>
       </div>
     </div>
   );

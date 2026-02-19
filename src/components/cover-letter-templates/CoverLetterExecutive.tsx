@@ -62,11 +62,10 @@ const CoverLetterExecutive = ({ data, customisation: c, fullName, email, phone, 
 
       <div className="relative">
         {data.signOff && <p className="mb-1">{data.signOff}</p>}
-        {data.signatureImage && <img src={data.signatureImage} alt="Signature" className="h-14 object-contain my-2" />}
-        <p style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 600 : 400 }}>{fullName}</p>
-        {data.sealImage && (
-          <img src={data.sealImage} alt="Seal" style={{ position: "absolute", width: `${data.sealSize ?? 30}mm`, height: `${data.sealSize ?? 30}mm`, objectFit: "contain", right: `${-(data.sealOffsetX ?? 0)}mm`, top: `${data.sealOffsetY ?? 0}mm`, pointerEvents: "none" }} />
+        {data.signatureImage && (
+          <img src={data.signatureImage} alt="Signature" style={{ width: `${data.signatureSize ?? 30}mm`, height: `${data.signatureSize ?? 30}mm`, objectFit: "contain", marginLeft: `${data.signatureOffsetX ?? 0}mm`, marginTop: `${data.signatureOffsetY ?? 0}mm` }} className="my-2" />
         )}
+        <p style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 600 : 400 }}>{fullName}</p>
       </div>
     </div>
   </div>
