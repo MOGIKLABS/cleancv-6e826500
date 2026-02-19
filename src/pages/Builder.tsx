@@ -210,6 +210,8 @@ const Builder = () => {
         clone.style.zIndex = "-1";
         document.body.appendChild(clone);
         clone.offsetHeight;
+        clone.style.height = "auto";
+        clone.style.minHeight = "0";
 
         captureEl = clone;
         cleanupFn = () => {
