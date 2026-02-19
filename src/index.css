@@ -162,11 +162,21 @@
 .one-page-mode [class*="mb-3"] { margin-bottom: 4px !important; }
 .one-page-mode [class*="mb-2"] { margin-bottom: 3px !important; }
 
-/* Slightly compress line-height */
+/* Slightly compress line-height — exclude inline-flex contact rows */
 .one-page-mode p,
 .one-page-mode li,
-.one-page-mode span {
+.one-page-mode span:not(.flex) {
   line-height: 1.35 !important;
+}
+
+/* Keep contact icon rows properly aligned in one-page mode */
+.one-page-mode .flex.items-center {
+  align-items: center !important;
+  line-height: normal !important;
+}
+
+.one-page-mode .flex.items-center svg {
+  flex-shrink: 0;
 }
 
 /* Reduce top/bottom borders & dividers */
