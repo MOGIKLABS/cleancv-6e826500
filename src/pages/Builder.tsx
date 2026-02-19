@@ -143,38 +143,40 @@ const Builder = () => {
         const sidebarCol = flexRow?.querySelector<HTMLElement>(":scope > div:first-child");
         const mainCol = flexRow?.querySelector<HTMLElement>(":scope > div.flex-1") || flexRow?.querySelector<HTMLElement>(":scope > div:last-child");
 
-        // 1. Remove aspect-ratio & override Tailwind h-full with !important
+        // 1. Override aspect-ratio, width, and height so element renders at content height
         if (cvShadow) {
-          cvShadow.style.setProperty("aspect-ratio", "unset", "important");
-          cvShadow.style.setProperty("height", "auto", "important");
-          cvShadow.style.setProperty("overflow", "visible", "important");
+          cvShadow.style.aspectRatio = "auto";
+          cvShadow.style.width = "794px";
+          cvShadow.style.maxWidth = "794px";
+          cvShadow.style.height = "auto";
+          cvShadow.style.overflow = "visible";
         }
         if (flexRow) {
-          flexRow.style.setProperty("height", "auto", "important");
-          flexRow.style.setProperty("min-height", "0", "important");
+          flexRow.style.height = "auto";
+          flexRow.style.minHeight = "0";
         }
 
         // 2. Force layout so columns render at natural height
-        hiddenDiv.offsetHeight;
+        void hiddenDiv.offsetHeight;
 
         // 3. Measure the taller column
         const mainH = mainCol?.scrollHeight || 0;
         const sideH = sidebarCol?.scrollHeight || 0;
         const fullHeight = Math.max(mainH, sideH);
 
-        // 4. Set explicit pixel heights on everything
-        if (cvShadow) cvShadow.style.setProperty("height", `${fullHeight}px`, "important");
+        // 4. Set explicit pixel heights so sidebar fills to match content
+        if (cvShadow) cvShadow.style.height = `${fullHeight}px`;
         if (flexRow) {
-          flexRow.style.setProperty("height", `${fullHeight}px`, "important");
-          flexRow.style.setProperty("min-height", `${fullHeight}px`, "important");
+          flexRow.style.height = `${fullHeight}px`;
+          flexRow.style.minHeight = `${fullHeight}px`;
         }
         if (sidebarCol) {
-          sidebarCol.style.setProperty("height", `${fullHeight}px`, "important");
-          sidebarCol.style.setProperty("min-height", `${fullHeight}px`, "important");
+          sidebarCol.style.height = `${fullHeight}px`;
+          sidebarCol.style.minHeight = `${fullHeight}px`;
         }
 
         // 5. Force layout again
-        hiddenDiv.offsetHeight;
+        void hiddenDiv.offsetHeight;
 
         captureEl = cvShadow || hiddenDiv;
         cleanupFn = () => {
@@ -184,9 +186,11 @@ const Builder = () => {
             if (!el) return;
             el.style.removeProperty("height");
             el.style.removeProperty("min-height");
-            el.style.removeProperty("aspect-ratio");
             el.style.removeProperty("overflow");
+            el.style.removeProperty("width");
+            el.style.removeProperty("max-width");
           });
+          if (cvShadow) cvShadow.style.aspectRatio = "210 / 297";
         };
       } else {
         // --- Standard clone approach for other templates ---
@@ -209,8 +213,8 @@ const Builder = () => {
         clone.style.top = "0";
         clone.style.zIndex = "-1";
         document.body.appendChild(clone);
-        // Remove aspect-ratio & height constraints so clone shrinks to content
-        clone.style.removeProperty("aspect-ratio");
+        // Override aspect-ratio & height constraints so clone shrinks to content
+        clone.style.aspectRatio = "auto";
         clone.style.height = "auto";
         clone.style.minHeight = "0";
         clone.style.overflow = "visible";
