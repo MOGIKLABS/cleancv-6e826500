@@ -1,5 +1,5 @@
 import { CoverLetterData, CVCustomisation } from "@/types/cv";
-import { Mail, Smartphone, MapPin, Linkedin, Github } from "lucide-react";
+import { Mail, Smartphone, MapPin, Linkedin, Github, Globe } from "lucide-react";
 
 interface Props {
   data: CoverLetterData;
@@ -10,10 +10,25 @@ interface Props {
   location: string;
   linkedin: string;
   github: string;
+  additionalInfo: string;
   formatDate: (d: string) => string;
 }
 
-const CoverLetterModern = ({ data, customisation: c, fullName, email, phone, location, linkedin, github, formatDate }: Props) => (
+const renderSignature = (data: CoverLetterData, c: CVCustomisation, fullName: string) => (
+  <div className="relative">
+    {data.signOff && <p className="mb-1">{data.signOff}</p>}
+    {data.signatureMode === "typed" && data.signatureTyped ? (
+      <p className="my-2" style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", fontSize: `${(data.signatureSize ?? 30) * 0.8}pt`, marginLeft: `${data.signatureOffsetX ?? 0}mm`, marginTop: `${data.signatureOffsetY ?? 0}mm` }}>
+        {data.signatureTyped}
+      </p>
+    ) : data.signatureImage ? (
+      <img src={data.signatureImage} alt="Signature" style={{ width: `${data.signatureSize ?? 30}mm`, height: `${data.signatureSize ?? 30}mm`, objectFit: "contain", marginLeft: `${data.signatureOffsetX ?? 0}mm`, marginTop: `${data.signatureOffsetY ?? 0}mm` }} className="my-2" />
+    ) : null}
+    <p style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 600 : 400 }}>{fullName}</p>
+  </div>
+);
+
+const CoverLetterModern = ({ data, customisation: c, fullName, email, phone, location, linkedin, github, additionalInfo, formatDate }: Props) => (
   <div
     className="bg-white shadow-sm mx-auto overflow-hidden"
     style={{
@@ -25,17 +40,17 @@ const CoverLetterModern = ({ data, customisation: c, fullName, email, phone, loc
       lineHeight: 1.6,
     }}
   >
-    {/* Coloured header band – mirrors Modern CV */}
     <div className="text-white" style={{ backgroundColor: `hsl(${c.primaryColour})`, padding: "20mm 25mm 12mm 25mm" }}>
       <h1 style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 700 : 500, fontSize: `${c.fontSize * 2}pt` }}>
         {fullName}
       </h1>
       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 opacity-90" style={{ fontSize: `${c.fontSize * 0.8}pt` }}>
-        {email && <span className="flex items-center gap-1"><Mail style={{ width: "0.9em", height: "0.9em" }} />{email}</span>}
+        {email && <a href={`mailto:${email}`} className="flex items-center gap-1 no-underline" style={{ color: "inherit" }}><Mail style={{ width: "0.9em", height: "0.9em" }} />{email}</a>}
         {phone && <span className="flex items-center gap-1"><Smartphone style={{ width: "0.9em", height: "0.9em" }} />{phone}</span>}
         {location && <span className="flex items-center gap-1"><MapPin style={{ width: "0.9em", height: "0.9em" }} />{location}</span>}
-        {linkedin && <span className="flex items-center gap-1"><Linkedin style={{ width: "0.9em", height: "0.9em" }} />{linkedin}</span>}
-        {github && <span className="flex items-center gap-1"><Github style={{ width: "0.9em", height: "0.9em" }} />{github}</span>}
+        {linkedin && <a href={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 no-underline" style={{ color: "inherit" }}><Linkedin style={{ width: "0.9em", height: "0.9em" }} />{linkedin}</a>}
+        {github && <a href={github.startsWith("http") ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 no-underline" style={{ color: "inherit" }}><Github style={{ width: "0.9em", height: "0.9em" }} />{github}</a>}
+        {additionalInfo && <a href={additionalInfo.startsWith("http") ? additionalInfo : `https://${additionalInfo}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 no-underline" style={{ color: "inherit" }}><Globe style={{ width: "0.9em", height: "0.9em" }} />{additionalInfo}</a>}
       </div>
     </div>
 
@@ -50,13 +65,7 @@ const CoverLetterModern = ({ data, customisation: c, fullName, email, phone, loc
         </div>
       )}
 
-      <div className="relative">
-        {data.signOff && <p className="mb-1">{data.signOff}</p>}
-        {data.signatureImage && (
-          <img src={data.signatureImage} alt="Signature" style={{ width: `${data.signatureSize ?? 30}mm`, height: `${data.signatureSize ?? 30}mm`, objectFit: "contain", marginLeft: `${data.signatureOffsetX ?? 0}mm`, marginTop: `${data.signatureOffsetY ?? 0}mm` }} className="my-2" />
-        )}
-        <p style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 600 : 400 }}>{fullName}</p>
-      </div>
+      {renderSignature(data, c, fullName)}
     </div>
   </div>
 );

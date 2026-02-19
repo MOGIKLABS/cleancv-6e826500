@@ -1,5 +1,5 @@
 import { CoverLetterData, CVCustomisation } from "@/types/cv";
-import { Mail, Smartphone, MapPin, Linkedin, Github } from "lucide-react";
+import { Mail, Smartphone, MapPin, Linkedin, Github, Globe } from "lucide-react";
 
 interface Props {
   data: CoverLetterData;
@@ -10,10 +10,25 @@ interface Props {
   location: string;
   linkedin: string;
   github: string;
+  additionalInfo: string;
   formatDate: (d: string) => string;
 }
 
-const CoverLetterExecutive = ({ data, customisation: c, fullName, email, phone, location, linkedin, github, formatDate }: Props) => (
+const renderSignature = (data: CoverLetterData, c: CVCustomisation, fullName: string) => (
+  <div className="relative">
+    {data.signOff && <p className="mb-1">{data.signOff}</p>}
+    {data.signatureMode === "typed" && data.signatureTyped ? (
+      <p className="my-2" style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", fontSize: `${(data.signatureSize ?? 30) * 0.8}pt`, marginLeft: `${data.signatureOffsetX ?? 0}mm`, marginTop: `${data.signatureOffsetY ?? 0}mm` }}>
+        {data.signatureTyped}
+      </p>
+    ) : data.signatureImage ? (
+      <img src={data.signatureImage} alt="Signature" style={{ width: `${data.signatureSize ?? 30}mm`, height: `${data.signatureSize ?? 30}mm`, objectFit: "contain", marginLeft: `${data.signatureOffsetX ?? 0}mm`, marginTop: `${data.signatureOffsetY ?? 0}mm` }} className="my-2" />
+    ) : null}
+    <p style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 600 : 400 }}>{fullName}</p>
+  </div>
+);
+
+const CoverLetterExecutive = ({ data, customisation: c, fullName, email, phone, location, linkedin, github, additionalInfo, formatDate }: Props) => (
   <div
     className="bg-white shadow-sm mx-auto"
     style={{
@@ -25,9 +40,7 @@ const CoverLetterExecutive = ({ data, customisation: c, fullName, email, phone, 
       lineHeight: 1.6,
     }}
   >
-    {/* Top accent line – mirrors Executive CV */}
     <div style={{ height: "4mm", backgroundColor: `hsl(${c.primaryColour})` }} />
-
     <div style={{ padding: "22mm 25mm 20mm 25mm" }}>
       <header className="flex items-start justify-between mb-6">
         <div>
@@ -36,11 +49,12 @@ const CoverLetterExecutive = ({ data, customisation: c, fullName, email, phone, 
           </h1>
         </div>
         <div className="text-right space-y-0.5" style={{ fontSize: `${c.fontSize * 0.8}pt`, opacity: 0.6 }}>
-          {email && <p className="flex items-center justify-end gap-1"><Mail style={{ width: "0.9em", height: "0.9em" }} />{email}</p>}
+          {email && <p className="flex items-center justify-end gap-1"><a href={`mailto:${email}`} className="flex items-center gap-1 no-underline" style={{ color: "inherit" }}><Mail style={{ width: "0.9em", height: "0.9em" }} />{email}</a></p>}
           {phone && <p className="flex items-center justify-end gap-1"><Smartphone style={{ width: "0.9em", height: "0.9em" }} />{phone}</p>}
           {location && <p className="flex items-center justify-end gap-1"><MapPin style={{ width: "0.9em", height: "0.9em" }} />{location}</p>}
-          {linkedin && <p className="flex items-center justify-end gap-1"><Linkedin style={{ width: "0.9em", height: "0.9em" }} />{linkedin}</p>}
-          {github && <p className="flex items-center justify-end gap-1"><Github style={{ width: "0.9em", height: "0.9em" }} />{github}</p>}
+          {linkedin && <p className="flex items-center justify-end gap-1"><a href={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 no-underline" style={{ color: "inherit" }}><Linkedin style={{ width: "0.9em", height: "0.9em" }} />{linkedin}</a></p>}
+          {github && <p className="flex items-center justify-end gap-1"><a href={github.startsWith("http") ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 no-underline" style={{ color: "inherit" }}><Github style={{ width: "0.9em", height: "0.9em" }} />{github}</a></p>}
+          {additionalInfo && <p className="flex items-center justify-end gap-1"><a href={additionalInfo.startsWith("http") ? additionalInfo : `https://${additionalInfo}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 no-underline" style={{ color: "inherit" }}><Globe style={{ width: "0.9em", height: "0.9em" }} />{additionalInfo}</a></p>}
         </div>
       </header>
 
@@ -60,13 +74,7 @@ const CoverLetterExecutive = ({ data, customisation: c, fullName, email, phone, 
         </div>
       )}
 
-      <div className="relative">
-        {data.signOff && <p className="mb-1">{data.signOff}</p>}
-        {data.signatureImage && (
-          <img src={data.signatureImage} alt="Signature" style={{ width: `${data.signatureSize ?? 30}mm`, height: `${data.signatureSize ?? 30}mm`, objectFit: "contain", marginLeft: `${data.signatureOffsetX ?? 0}mm`, marginTop: `${data.signatureOffsetY ?? 0}mm` }} className="my-2" />
-        )}
-        <p style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 600 : 400 }}>{fullName}</p>
-      </div>
+      {renderSignature(data, c, fullName)}
     </div>
   </div>
 );

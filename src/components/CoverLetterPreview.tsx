@@ -43,6 +43,7 @@ const CoverLetterPreview = ({ data, cvData, customisation }: CoverLetterPreviewP
   const linkedin = data.overrideLinkedin || personal.linkedin || "";
   const github = data.overrideGithub || personal.github || "";
   const location = data.overrideLocation || personal.location;
+  const additionalInfo = data.additionalInfo || "";
 
   const Template = templateMap[customisation.template] || CoverLetterMinimal;
 
@@ -56,6 +57,7 @@ const CoverLetterPreview = ({ data, cvData, customisation }: CoverLetterPreviewP
       location={location}
       linkedin={linkedin}
       github={github}
+      additionalInfo={additionalInfo}
       formatDate={formatDate}
     />
   );

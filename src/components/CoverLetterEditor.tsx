@@ -3,11 +3,12 @@ import { CoverLetterData, CVData, CVCustomisation } from "@/types/cv";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Mail, Sparkles, Loader2, Upload, ImageIcon, Trash2 } from "lucide-react";
+import { Mail, Sparkles, Loader2, Upload, ImageIcon, Trash2, Type } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BulletTextarea from "@/components/BulletTextarea";
 import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CoverLetterEditorProps {
   data: CoverLetterData;
@@ -53,13 +54,14 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        update({ signatureImage: reader.result });
+        update({ signatureImage: reader.result, signatureMode: "image" });
       }
     };
     reader.readAsDataURL(file);
   };
 
   const wordCount = data.body.trim().split(/\s+/).filter(Boolean).length;
+  const sigMode = data.signatureMode || "image";
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -113,14 +115,25 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
             />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">GitHub</Label>
+            <Label className="text-xs text-muted-foreground">GitHub / Portfolio URL</Label>
             <Input
               value={data.overrideGithub !== undefined && data.overrideGithub !== "" ? data.overrideGithub : (cvData.personal.github || "")}
               onChange={(e) => update({ overrideGithub: e.target.value })}
-              placeholder="GitHub URL"
+              placeholder="GitHub or Portfolio URL"
             />
           </div>
         </div>
+      </div>
+
+      {/* Additional Info */}
+      <div>
+        <Label className="text-xs text-muted-foreground">Additional Info (custom URL or note)</Label>
+        <Input
+          value={data.additionalInfo || ""}
+          onChange={(e) => update({ additionalInfo: e.target.value })}
+          placeholder="e.g. cleancv.mogiklabs.com or any extra info"
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">Displayed as a clickable link with a globe icon in the preview.</p>
       </div>
 
       {/* Date */}
@@ -174,31 +187,72 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
         <Input value={data.signOff} onChange={(e) => update({ signOff: e.target.value })} placeholder="Yours sincerely," />
       </div>
 
-      {/* Signature upload with size/offset controls */}
+      {/* Signature section with tabs for image vs typed */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <ImageIcon className="h-4 w-4 text-primary" />
-          <Label className="text-xs text-muted-foreground">Signature (JPG / PNG)</Label>
+          <Label className="text-xs text-muted-foreground">Signature</Label>
         </div>
 
-        {data.signatureImage ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <img
-                src={data.signatureImage}
-                alt="Signature"
-                className="h-16 object-contain rounded border border-border bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)_0_0/16px_16px] p-1"
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive"
-                onClick={() => update({ signatureImage: "" })}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+        <Tabs value={sigMode} onValueChange={(v) => update({ signatureMode: v as "image" | "typed" })}>
+          <TabsList className="h-8">
+            <TabsTrigger value="image" className="text-xs gap-1"><Upload className="h-3 w-3" />Upload Image</TabsTrigger>
+            <TabsTrigger value="typed" className="text-xs gap-1"><Type className="h-3 w-3" />Type Signature</TabsTrigger>
+          </TabsList>
 
+          <TabsContent value="image" className="mt-3 space-y-3">
+            {data.signatureImage ? (
+              <div className="flex items-center gap-2">
+                <img
+                  src={data.signatureImage}
+                  alt="Signature"
+                  className="h-16 object-contain rounded border border-border bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)_0_0/16px_16px] p-1"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive"
+                  onClick={() => update({ signatureImage: "" })}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <label className="cursor-pointer">
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs" asChild>
+                  <span>
+                    <Upload className="h-3.5 w-3.5" />
+                    Upload Signature Image
+                    <input type="file" accept="image/png,image/jpeg" className="sr-only" onChange={handleSignatureUpload} />
+                  </span>
+                </Button>
+              </label>
+            )}
+            <p className="text-[10px] text-muted-foreground">Supports JPG and PNG. Works for signatures, seals, or stamps.</p>
+          </TabsContent>
+
+          <TabsContent value="typed" className="mt-3 space-y-3">
+            <Input
+              value={data.signatureTyped || ""}
+              onChange={(e) => update({ signatureTyped: e.target.value })}
+              placeholder="Type your name"
+              className="text-lg"
+              style={{ fontFamily: "'Dancing Script', cursive" }}
+            />
+            {data.signatureTyped && (
+              <div className="rounded border border-border p-3 bg-background">
+                <p className="text-muted-foreground text-[10px] mb-1">Preview:</p>
+                <p style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", fontSize: "24pt" }}>
+                  {data.signatureTyped}
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Shared size/offset controls */}
+        {((sigMode === "image" && data.signatureImage) || (sigMode === "typed" && data.signatureTyped)) && (
+          <div className="space-y-3 pt-2">
             <div>
               <Label className="text-[10px] text-muted-foreground">Size ({data.signatureSize ?? 30}mm)</Label>
               <Slider
@@ -210,7 +264,6 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
                 className="mt-1"
               />
             </div>
-
             <div>
               <Label className="text-[10px] text-muted-foreground">Horizontal offset ({data.signatureOffsetX ?? 0}mm)</Label>
               <Slider
@@ -222,7 +275,6 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
                 className="mt-1"
               />
             </div>
-
             <div>
               <Label className="text-[10px] text-muted-foreground">Vertical offset ({data.signatureOffsetY ?? 0}mm)</Label>
               <Slider
@@ -235,18 +287,7 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
               />
             </div>
           </div>
-        ) : (
-          <label className="cursor-pointer">
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs" asChild>
-              <span>
-                <Upload className="h-3.5 w-3.5" />
-                Upload Signature Image
-                <input type="file" accept="image/png,image/jpeg" className="sr-only" onChange={handleSignatureUpload} />
-              </span>
-            </Button>
-          </label>
         )}
-        <p className="text-[10px] text-muted-foreground">Supports JPG and PNG. Works for signatures, seals, or stamps.</p>
       </div>
     </div>
   );

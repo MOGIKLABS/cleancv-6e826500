@@ -37,9 +37,12 @@ export interface CoverLetterData {
   body: string; // the main letter content (max 500 words)
   signOff: string;
   signatureImage: string; // base64 data URL (JPG/PNG) – used for signature or seal
+  signatureTyped?: string; // typed name used as signature (rendered in script font)
+  signatureMode?: "image" | "typed"; // which signature to show
   signatureSize?: number; // size in mm (default 30)
   signatureOffsetX?: number; // horizontal offset in mm (default 0)
   signatureOffsetY?: number; // vertical offset in mm (default 0)
+  additionalInfo?: string; // free text for custom URL or note
   // Optional overrides – when empty, CV data is used
   overrideFullName?: string;
   overrideEmail?: string;
@@ -56,9 +59,12 @@ export const defaultCoverLetterData: CoverLetterData = {
   body: "",
   signOff: "Yours sincerely,",
   signatureImage: "",
+  signatureTyped: "",
+  signatureMode: "image",
   signatureSize: 30,
   signatureOffsetX: 0,
   signatureOffsetY: 0,
+  additionalInfo: "",
   overrideFullName: "",
   overrideEmail: "",
   overridePhone: "",
