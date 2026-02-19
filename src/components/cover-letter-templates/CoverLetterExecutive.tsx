@@ -15,7 +15,7 @@ interface Props {
 }
 
 const renderSignature = (data: CoverLetterData, c: CVCustomisation, fullName: string) => (
-  <div className="relative">
+  <div className="relative signature-block" style={{ breakInside: "avoid", pageBreakInside: "avoid" }}>
     {data.signOff && <p className="mb-1">{data.signOff}</p>}
     {data.signatureMode === "typed" && data.signatureTyped ? (
       <p className="my-2" style={{ fontFamily: "'Dancing Script', 'Brush Script MT', cursive", fontSize: `${(data.signatureSize ?? 30) * 0.8}pt`, marginLeft: `${data.signatureOffsetX ?? 0}mm`, marginTop: `${data.signatureOffsetY ?? 0}mm` }}>

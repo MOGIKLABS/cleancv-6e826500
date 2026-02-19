@@ -141,36 +141,43 @@ const Builder = () => {
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
 
-      // For cover letters, temporarily constrain max-height to force single-page fit
-      if (target === "cover") {
-        el.style.maxHeight = "297mm";
-        el.style.overflow = "hidden";
-      }
+      // Add page-break-inside: avoid to signature blocks before capture
+      const sigBlocks = el.querySelectorAll<HTMLElement>(".signature-block");
+      sigBlocks.forEach((b) => { b.style.pageBreakInside = "avoid"; b.style.breakInside = "avoid"; });
 
-      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        windowWidth: el.scrollWidth,
+      });
 
-      // Restore original styles
-      if (target === "cover") {
-        el.style.maxHeight = "";
-        el.style.overflow = "";
-      }
+      // Restore
+      sigBlocks.forEach((b) => { b.style.pageBreakInside = ""; b.style.breakInside = ""; });
 
-      const MARGIN = 2; // mm safety margin each side
+      const MARGIN_X = 5; // mm horizontal margin each side
       const A4_W = 210;
       const A4_H = 297;
-      const contentW = A4_W - MARGIN * 2;
+      const contentW = A4_W - MARGIN_X * 2;
       const imgH = (canvas.height * contentW) / canvas.width;
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const imgData = canvas.toDataURL("image/png");
 
-      if (imgH <= A4_H) {
-        pdf.addImage(imgData, "PNG", MARGIN, 0, contentW, imgH);
+      if (target === "cover" && imgH > A4_H) {
+        // Scale the entire cover letter to fit one page
+        const fitScale = A4_H / imgH;
+        const scaledW = contentW * fitScale;
+        const scaledH = A4_H;
+        const offsetX = MARGIN_X + (contentW - scaledW) / 2; // center horizontally
+        pdf.addImage(imgData, "PNG", offsetX, 0, scaledW, scaledH);
+      } else if (imgH <= A4_H) {
+        pdf.addImage(imgData, "PNG", MARGIN_X, 0, contentW, imgH);
       } else {
         let y = 0;
         while (y < imgH) {
           if (y > 0) pdf.addPage();
-          pdf.addImage(imgData, "PNG", MARGIN, -y, contentW, imgH);
+          pdf.addImage(imgData, "PNG", MARGIN_X, -y, contentW, imgH);
           y += A4_H;
         }
       }
