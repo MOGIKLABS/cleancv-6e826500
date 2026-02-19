@@ -38,6 +38,13 @@ export interface CoverLetterData {
   signOff: string;
   signatureMode: "image" | "draw"; // toggle between uploaded image or drawn signature
   signatureImage: string; // base64 data URL for uploaded or drawn signature
+  // Optional overrides – when empty, CV data is used
+  overrideFullName?: string;
+  overrideEmail?: string;
+  overridePhone?: string;
+  overrideLinkedin?: string;
+  overrideGithub?: string;
+  overrideLocation?: string;
 }
 
 export const defaultCoverLetterData: CoverLetterData = {
@@ -48,6 +55,12 @@ export const defaultCoverLetterData: CoverLetterData = {
   signOff: "Yours sincerely,",
   signatureMode: "draw",
   signatureImage: "",
+  overrideFullName: "",
+  overrideEmail: "",
+  overridePhone: "",
+  overrideLinkedin: "",
+  overrideGithub: "",
+  overrideLocation: "",
 };
 
 export type TemplateName = "classic" | "modern" | "minimal" | "creative" | "executive";

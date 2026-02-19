@@ -9,6 +9,14 @@ interface CoverLetterPreviewProps {
 const CoverLetterPreview = ({ data, cvData, customisation: c }: CoverLetterPreviewProps) => {
   const { personal } = cvData;
 
+  // Use override values when set, otherwise fall back to CV data
+  const fullName = data.overrideFullName || personal.fullName;
+  const phone = data.overridePhone || personal.phone;
+  const email = data.overrideEmail || personal.email;
+  const linkedin = data.overrideLinkedin || personal.linkedin || "";
+  const github = data.overrideGithub || personal.github || "";
+  const location = data.overrideLocation || personal.location;
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "";
     try {
@@ -46,17 +54,17 @@ const CoverLetterPreview = ({ data, cvData, customisation: c }: CoverLetterPrevi
             letterSpacing: "-0.02em",
           }}
         >
-          {personal.fullName}
+          {fullName}
         </h1>
         <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1" style={{ fontSize: `${c.fontSize * 0.85}pt` }}>
-          {personal.phone && <span>{personal.phone}</span>}
-          {personal.email && <span>{personal.email}</span>}
-          {personal.linkedin && <span>{personal.linkedin}</span>}
-          {personal.github && <span>{personal.github}</span>}
+          {phone && <span>{phone}</span>}
+          {email && <span>{email}</span>}
+          {linkedin && <span>{linkedin}</span>}
+          {github && <span>{github}</span>}
         </div>
-        {personal.location && (
+        {location && (
           <p className="mt-0.5" style={{ fontSize: `${c.fontSize * 0.85}pt` }}>
-            {personal.location}
+            {location}
           </p>
         )}
       </header>
@@ -98,7 +106,7 @@ const CoverLetterPreview = ({ data, cvData, customisation: c }: CoverLetterPrevi
           fontWeight: c.headingBold ? 600 : 400,
         }}
       >
-        {personal.fullName}
+        {fullName}
       </p>
     </div>
   );
