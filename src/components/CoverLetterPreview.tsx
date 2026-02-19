@@ -91,23 +91,43 @@ const CoverLetterPreview = ({ data, cvData, customisation: c }: CoverLetterPrevi
         </div>
       )}
 
-      {/* Sign-off */}
-      {data.signOff && <p className="mb-1">{data.signOff}</p>}
+      {/* Signature + Seal area */}
+      <div className="relative">
+        {/* Sign-off */}
+        {data.signOff && <p className="mb-1">{data.signOff}</p>}
 
-      {/* Signature */}
-      {data.signatureImage && (
-        <img src={data.signatureImage} alt="Signature" className="h-14 object-contain my-2" />
-      )}
+        {/* Signature */}
+        {data.signatureImage && (
+          <img src={data.signatureImage} alt="Signature" className="h-14 object-contain my-2" />
+        )}
 
-      {/* Name */}
-      <p
-        style={{
-          fontFamily: c.headingFont,
-          fontWeight: c.headingBold ? 600 : 400,
-        }}
-      >
-        {fullName}
-      </p>
+        {/* Name */}
+        <p
+          style={{
+            fontFamily: c.headingFont,
+            fontWeight: c.headingBold ? 600 : 400,
+          }}
+        >
+          {fullName}
+        </p>
+
+        {/* Seal / Stamp */}
+        {data.sealImage && (
+          <img
+            src={data.sealImage}
+            alt="Seal"
+            style={{
+              position: "absolute",
+              width: `${data.sealSize ?? 30}mm`,
+              height: `${data.sealSize ?? 30}mm`,
+              objectFit: "contain",
+              right: `${-(data.sealOffsetX ?? 0)}mm`,
+              top: `${data.sealOffsetY ?? 0}mm`,
+              pointerEvents: "none",
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 };
