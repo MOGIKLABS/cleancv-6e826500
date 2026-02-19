@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, ArrowLeft, Download, Sparkles, Loader2, Eye, PenLine, Save, Check, FileDown, Maximize, Undo2, ChevronDown, Mail } from "lucide-react";
+import { FileText, ArrowLeft, Download, Sparkles, Loader2, Eye, PenLine, Save, Check, FileDown, Maximize, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CVEditor from "@/components/CVEditor";
 import CVPreview from "@/components/CVPreview";
 import ATSChecker from "@/components/ATSChecker";
@@ -121,18 +120,12 @@ const Builder = () => {
     }
   };
 
-  const getPreviewHtml = (selector = "cv-preview"): string => {
-    const el = document.getElementById(selector);
-    if (!el) return "";
-    return el.outerHTML;
-  };
-
-  const getExportFilename = (ext: string, prefix = "CV") => {
+  const getExportFilename = (prefix = "CV") => {
     const existingDrafts = loadAllDrafts();
     const currentDraft = existingDrafts.find(d => d.id === draftId);
     const label = currentDraft?.label || cvData.personal.fullName || prefix;
     const date = new Date().toISOString().slice(0, 10);
-    return `${label}-${prefix}-${date}.${ext}`;
+    return `${label}-${prefix}-${date}.pdf`;
   };
 
   const handleExportPdf = async (target: "cv" | "cover" = "cv") => {
@@ -182,52 +175,11 @@ const Builder = () => {
         }
       }
 
-      pdf.save(getExportFilename("pdf", target === "cover" ? "CoverLetter" : "CV"));
+      pdf.save(getExportFilename(target === "cover" ? "CoverLetter" : "CV"));
       toast.success("PDF exported successfully.");
     } catch (e: any) {
       console.error("PDF export error:", e);
       toast.error("PDF export failed. Please try again.");
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleExportDocx = async (target: "cv" | "cover" = "cv") => {
-    setExporting(true);
-    try {
-      const elId = target === "cover" ? "cover-letter-preview" : "cv-preview";
-      const htmlContent = getPreviewHtml(elId);
-      if (!htmlContent) {
-        toast.error(`No ${target === "cover" ? "cover letter" : "CV"} preview found.`);
-        return;
-      }
-
-      const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        * { box-sizing: border-box; }
-        ul { margin: 4px 0; padding-left: 20px; }
-        li { margin-bottom: 2px; }
-      </style></head><body>${htmlContent}</body></html>`;
-
-      const { default: HTMLtoDOCX } = await import("html-to-docx");
-      const blob = await HTMLtoDOCX(fullHtml, null, {
-        table: { row: { cantSplit: true } },
-        footer: false,
-        header: false,
-      });
-
-      const url = URL.createObjectURL(blob as Blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = getExportFilename("docx", target === "cover" ? "CoverLetter" : "CV");
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("DOCX exported successfully.");
-    } catch (e: any) {
-      console.error("DOCX export error:", e);
-      toast.error("DOCX export failed. Try PDF instead.");
     } finally {
       setExporting(false);
     }
@@ -356,41 +308,16 @@ const Builder = () => {
             </>
           )}
 
-          {/* Export dropdown – context-aware */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" className="gap-1.5" disabled={exporting}>
-                {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
-                <span className="hidden sm:inline">{activeTab === "cover" ? "Export Letter" : "Export CV"}</span>
-                <ChevronDown className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {activeTab === "cover" ? (
-                <>
-                  <DropdownMenuItem onClick={() => handleExportPdf("cover")} className="gap-2 cursor-pointer">
-                    <Download className="h-4 w-4" />
-                    Cover Letter as PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExportDocx("cover")} className="gap-2 cursor-pointer">
-                    <Mail className="h-4 w-4" />
-                    Cover Letter as DOCX
-                  </DropdownMenuItem>
-                </>
-              ) : (
-                <>
-                  <DropdownMenuItem onClick={() => handleExportPdf("cv")} className="gap-2 cursor-pointer">
-                    <Download className="h-4 w-4" />
-                    Export as PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExportDocx("cv")} className="gap-2 cursor-pointer">
-                    <FileText className="h-4 w-4" />
-                    Export as DOCX
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Export PDF – context-aware */}
+          <Button
+            size="sm"
+            className="gap-1.5"
+            disabled={exporting}
+            onClick={() => handleExportPdf(activeTab === "cover" ? "cover" : "cv")}
+          >
+            {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{activeTab === "cover" ? "Export Letter" : "Export CV"}</span>
+          </Button>
         </div>
       </header>
 
