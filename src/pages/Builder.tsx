@@ -126,6 +126,14 @@ const Builder = () => {
     return el.outerHTML;
   };
 
+  const getExportFilename = (ext: string) => {
+    const existingDrafts = loadAllDrafts();
+    const currentDraft = existingDrafts.find(d => d.id === draftId);
+    const label = currentDraft?.label || cvData.personal.fullName || "CV";
+    const date = new Date().toISOString().slice(0, 10);
+    return `${label}-${date}.${ext}`;
+  };
+
   const handleExportPdf = async () => {
     setExporting(true);
     try {
@@ -163,7 +171,7 @@ const Builder = () => {
         }
       }
 
-      pdf.save(`${cvData.personal.fullName || "CV"}.pdf`);
+      pdf.save(getExportFilename("pdf"));
       toast.success("PDF exported successfully.");
     } catch (e: any) {
       console.error("PDF export error:", e);
@@ -199,7 +207,7 @@ const Builder = () => {
       const url = URL.createObjectURL(blob as Blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${cvData.personal.fullName || "CV"}.docx`;
+      a.download = getExportFilename("docx");
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
