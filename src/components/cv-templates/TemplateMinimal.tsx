@@ -8,7 +8,7 @@ const TemplateMinimal = ({ data, customisation: c }: Props) => {
   const { personal, experiences, education, skills } = data;
 
   return (
-    <div className="cv-shadow rounded-lg overflow-hidden bg-white w-full max-w-[640px] mx-auto p-8" style={{ fontFamily: c.fontFamily, fontSize: `${c.fontSize}px`, color: `hsl(${c.textColour})` }}>
+    <div className="cv-shadow rounded-lg overflow-hidden bg-white w-full max-w-[640px] mx-auto p-8" style={{ fontFamily: c.fontFamily, fontSize: `${c.fontSize}px`, color: `hsl(${c.textColour})`, aspectRatio: "210 / 297" }}>
       <div className="flex items-center gap-4 mb-4">
         {personal.photo && <img src={personal.photo} alt="" className="w-12 h-12 rounded-full object-cover" />}
         <div>

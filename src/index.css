@@ -125,12 +125,9 @@
  * NO scale transforms — content stays at readable native font sizes.
  * Goal: fit within A4 by tightening whitespace, not shrinking text.
  */
-/* Force all CV previews to use content-based height (no fixed aspect ratio) */
-#cv-preview .cv-shadow,
+/* One-page mode: remove fixed A4 aspect ratio so content flows naturally */
 .one-page-mode .cv-shadow {
   aspect-ratio: auto !important;
-  height: auto !important;
-  min-height: 0 !important;
 }
 
 /* Moderately reduce padding inside the CV */
