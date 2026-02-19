@@ -141,10 +141,11 @@ const Builder = () => {
       // Restore
       sigBlocks.forEach((b) => { b.style.pageBreakInside = ""; b.style.breakInside = ""; });
 
-      const MARGIN_X = 5; // mm horizontal margin each side
       const A4_W = 210;
       const A4_H = 297;
-      const contentW = A4_W - MARGIN_X * 2;
+      // Templates already include their own padding (20-22mm), so no extra PDF margin needed
+      const MARGIN_X = 0;
+      const contentW = A4_W;
       const imgH = (canvas.height * contentW) / canvas.width;
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
