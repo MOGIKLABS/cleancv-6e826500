@@ -212,6 +212,7 @@ const Builder = () => {
         clone.offsetHeight;
         clone.style.height = "auto";
         clone.style.minHeight = "0";
+        clone.style.aspectRatio = "unset";
 
         captureEl = clone;
         cleanupFn = () => {
@@ -330,7 +331,7 @@ const Builder = () => {
   );
 
   const previewPanel = (
-    <div className="p-4 sm:p-8 flex items-start justify-center min-h-full">
+    <div className="px-4 pt-4 pb-2 sm:px-8 sm:pt-8 sm:pb-4 flex items-start justify-center">
       <div className="w-full max-w-[210mm] origin-top scale-[0.6] sm:scale-[0.75] md:scale-100">
         {activeTab === "cover" ? (
           <div id="cover-letter-preview">
