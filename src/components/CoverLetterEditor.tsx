@@ -69,16 +69,58 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
         <h2 className="font-display text-lg font-semibold text-foreground">Cover Letter</h2>
       </div>
 
-      {/* Auto-populated fields from CV */}
-      <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Auto-filled from CV</p>
-        <div className="grid grid-cols-2 gap-2 text-xs text-foreground">
-          <span>{cvData.personal.fullName || "—"}</span>
-          <span>{cvData.personal.phone || "—"}</span>
-          <span>{cvData.personal.email || "—"}</span>
-          <span>{cvData.personal.linkedin || "—"}</span>
-          <span>{cvData.personal.location || "—"}</span>
-          <span>{cvData.personal.github || "—"}</span>
+      {/* Editable contact fields (pre-filled from CV) */}
+      <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Contact Details (editable)</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs text-muted-foreground">Full Name</Label>
+            <Input
+              value={data.overrideFullName !== undefined && data.overrideFullName !== "" ? data.overrideFullName : cvData.personal.fullName}
+              onChange={(e) => update({ overrideFullName: e.target.value })}
+              placeholder="Full Name"
+            />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Phone</Label>
+            <Input
+              value={data.overridePhone !== undefined && data.overridePhone !== "" ? data.overridePhone : cvData.personal.phone}
+              onChange={(e) => update({ overridePhone: e.target.value })}
+              placeholder="Phone"
+            />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Email</Label>
+            <Input
+              value={data.overrideEmail !== undefined && data.overrideEmail !== "" ? data.overrideEmail : cvData.personal.email}
+              onChange={(e) => update({ overrideEmail: e.target.value })}
+              placeholder="Email"
+            />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">LinkedIn</Label>
+            <Input
+              value={data.overrideLinkedin !== undefined && data.overrideLinkedin !== "" ? data.overrideLinkedin : (cvData.personal.linkedin || "")}
+              onChange={(e) => update({ overrideLinkedin: e.target.value })}
+              placeholder="LinkedIn URL"
+            />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Location</Label>
+            <Input
+              value={data.overrideLocation !== undefined && data.overrideLocation !== "" ? data.overrideLocation : cvData.personal.location}
+              onChange={(e) => update({ overrideLocation: e.target.value })}
+              placeholder="Location"
+            />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">GitHub</Label>
+            <Input
+              value={data.overrideGithub !== undefined && data.overrideGithub !== "" ? data.overrideGithub : (cvData.personal.github || "")}
+              onChange={(e) => update({ overrideGithub: e.target.value })}
+              placeholder="GitHub URL"
+            />
+          </div>
         </div>
       </div>
 
