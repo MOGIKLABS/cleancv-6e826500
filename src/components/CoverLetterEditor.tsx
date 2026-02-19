@@ -4,11 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Mail, Sparkles, Loader2, Upload, ImageIcon, PenLine } from "lucide-react";
+import { Mail, Sparkles, Loader2, Upload, ImageIcon, PenLine, Stamp, Trash2 } from "lucide-react";
 import SignatureCanvas from "@/components/SignatureCanvas";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BulletTextarea from "@/components/BulletTextarea";
+import { Slider } from "@/components/ui/slider";
 
 interface CoverLetterEditorProps {
   data: CoverLetterData;
@@ -207,6 +208,100 @@ const CoverLetterEditor = ({ data, cvData, jobDescription, onChange }: CoverLett
             </label>
           </div>
         )}
+      </div>
+
+      {/* Seal / Stamp upload */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Stamp className="h-4 w-4 text-primary" />
+          <Label className="text-xs text-muted-foreground">Seal / Stamp (PNG)</Label>
+        </div>
+
+        {data.sealImage ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <img
+                src={data.sealImage}
+                alt="Seal"
+                className="h-20 w-20 object-contain rounded border border-border bg-[repeating-conic-gradient(hsl(var(--muted))_0%_25%,transparent_0%_50%)_0_0/16px_16px] p-1"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive"
+                onClick={() => update({ sealImage: "" })}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div>
+              <Label className="text-[10px] text-muted-foreground">Size ({data.sealSize ?? 30}mm)</Label>
+              <Slider
+                min={15}
+                max={60}
+                step={1}
+                value={[data.sealSize ?? 30]}
+                onValueChange={([v]) => update({ sealSize: v })}
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label className="text-[10px] text-muted-foreground">Horizontal offset ({data.sealOffsetX ?? 0}mm)</Label>
+              <Slider
+                min={-50}
+                max={100}
+                step={1}
+                value={[data.sealOffsetX ?? 0]}
+                onValueChange={([v]) => update({ sealOffsetX: v })}
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label className="text-[10px] text-muted-foreground">Vertical offset ({data.sealOffsetY ?? 0}mm)</Label>
+              <Slider
+                min={-30}
+                max={30}
+                step={1}
+                value={[data.sealOffsetY ?? 0]}
+                onValueChange={([v]) => update({ sealOffsetY: v })}
+                className="mt-1"
+              />
+            </div>
+          </div>
+        ) : (
+          <label className="cursor-pointer">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" asChild>
+              <span>
+                <Upload className="h-3.5 w-3.5" />
+                Upload Seal Image
+                <input
+                  type="file"
+                  accept="image/png"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.type !== "image/png") {
+                      toast.error("Please upload a PNG file.");
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      if (typeof reader.result === "string") {
+                        update({ sealImage: reader.result });
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </span>
+            </Button>
+          </label>
+        )}
+        <p className="text-[10px] text-muted-foreground">Supports PNG with transparent or white background.</p>
       </div>
     </div>
   );
