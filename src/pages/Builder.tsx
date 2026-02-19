@@ -142,6 +142,19 @@ const Builder = () => {
       clone.style.left = "-9999px";
       clone.style.top = "0";
       clone.style.zIndex = "-1";
+
+      // Ensure flex stretch is preserved on the cloned sidebar
+      const cloneFlex = clone.querySelector<HTMLElement>(":scope > div");
+      if (cloneFlex) {
+        cloneFlex.style.display = "flex";
+        cloneFlex.style.minHeight = "100%";
+      }
+      const cloneSidebar = clone.querySelector<HTMLElement>(":scope > div > div:first-child");
+      if (cloneSidebar) {
+        cloneSidebar.style.alignSelf = "stretch";
+        cloneSidebar.style.minHeight = "100%";
+      }
+
       document.body.appendChild(clone);
 
       // Force layout
