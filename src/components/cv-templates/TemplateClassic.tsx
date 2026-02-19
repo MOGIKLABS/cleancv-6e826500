@@ -23,7 +23,7 @@ const TemplateClassic = ({ data, customisation }: Props) => {
     <div className="cv-shadow rounded-lg overflow-hidden bg-white w-full max-w-[640px] mx-auto" style={{ ...style, aspectRatio: "8.5/11" }}>
       <div className="flex h-full">
         {/* Sidebar */}
-        <div className="w-[35%] p-5 flex flex-col gap-5 text-white/90" style={{ backgroundColor: `hsl(${c.sidebarColour})` }}>
+        <div className="w-[38%] p-5 flex flex-col gap-4 text-white/90" style={{ backgroundColor: `hsl(${c.sidebarColour})` }}>
           {/* Photo / Initials */}
           <div className="w-24 h-24 rounded-full border-2 mx-auto flex items-center justify-center overflow-hidden" style={{ borderColor: `hsl(${c.primaryColour})` }}>
             {personal.photo ? (
@@ -37,22 +37,22 @@ const TemplateClassic = ({ data, customisation }: Props) => {
 
           {/* Contact */}
           <div>
-            <h3 className="text-[9px] uppercase tracking-widest font-semibold mb-2" style={{ color: `hsl(${c.primaryColour})` }}>Contact</h3>
-            <div className="space-y-1.5 text-[9px]">
-              <div className="flex items-center gap-1.5"><Mail className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><a href={`mailto:${personal.email}`} className="truncate underline">{personal.email}</a></div>
-              <div className="flex items-center gap-1.5"><Smartphone className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><span>{personal.phone}</span></div>
-              <div className="flex items-center gap-1.5"><MapPin className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><span>{personal.location}</span></div>
-              {personal.linkedin && <div className="flex items-center gap-1.5"><Linkedin className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" className="truncate underline">{personal.linkedin}</a></div>}
-              {personal.github && <div className="flex items-center gap-1.5"><Github className="h-2.5 w-2.5 flex-shrink-0" style={{ color: `hsl(${c.primaryColour})` }} /><a href={personal.github.startsWith("http") ? personal.github : `https://${personal.github}`} target="_blank" rel="noopener noreferrer" className="truncate underline">{personal.github}</a></div>}
+            <h3 className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: `hsl(${c.primaryColour})` }}>Contact</h3>
+            <div className="space-y-2 text-[10px]">
+              <div className="flex items-start gap-2"><Mail className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} /><a href={`mailto:${personal.email}`} className="break-all underline">{personal.email}</a></div>
+              <div className="flex items-start gap-2"><Smartphone className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} /><span>{personal.phone}</span></div>
+              <div className="flex items-start gap-2"><MapPin className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} /><span>{personal.location}</span></div>
+              {personal.linkedin && <div className="flex items-start gap-2"><Linkedin className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} /><a href={personal.linkedin.startsWith("http") ? personal.linkedin : `https://${personal.linkedin}`} target="_blank" rel="noopener noreferrer" className="break-all underline">{personal.linkedin}</a></div>}
+              {personal.github && <div className="flex items-start gap-2"><Github className="h-3 w-3 flex-shrink-0 mt-0.5" style={{ color: `hsl(${c.primaryColour})` }} /><a href={personal.github.startsWith("http") ? personal.github : `https://${personal.github}`} target="_blank" rel="noopener noreferrer" className="break-all underline">{personal.github}</a></div>}
             </div>
           </div>
 
           {/* Skills */}
           <div>
-            <h3 className="text-[9px] uppercase tracking-widest font-semibold mb-2" style={{ color: `hsl(${c.primaryColour})` }}>Skills</h3>
-            <div className="flex flex-wrap gap-1">
+            <h3 className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: `hsl(${c.primaryColour})` }}>Skills</h3>
+            <div className="flex flex-wrap gap-1.5">
               {skills.map((skill) => (
-                <span key={skill} className="inline-block rounded px-1.5 py-0.5 text-[8px]" style={{ backgroundColor: `hsl(${c.primaryColour} / 0.2)`, color: "white" }}>
+                <span key={skill} className="inline-block rounded px-2 py-0.5 text-[9px]" style={{ backgroundColor: `hsl(${c.primaryColour} / 0.2)`, color: "white" }}>
                   {skill}
                 </span>
               ))}
@@ -61,12 +61,12 @@ const TemplateClassic = ({ data, customisation }: Props) => {
 
           {/* Education */}
           <div>
-            <h3 className="text-[9px] uppercase tracking-widest font-semibold mb-2" style={{ color: `hsl(${c.primaryColour})` }}>Education</h3>
+            <h3 className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: `hsl(${c.primaryColour})` }}>Education</h3>
             {education.map((edu) => (
-              <div key={edu.id} className="mb-2">
-                <p className="font-semibold text-[9px]">{edu.degree} {edu.field}{edu.grade ? ` — ${edu.grade}` : ""}</p>
-                <p className="text-[8px] opacity-70">{edu.institution}</p>
-                <p className="text-[8px]" style={{ color: `hsl(${c.primaryColour})` }}>{edu.startDate} — {edu.endDate}</p>
+              <div key={edu.id} className="mb-2.5">
+                <p className="font-semibold text-[10px]">{edu.degree} {edu.field}{edu.grade ? ` — ${edu.grade}` : ""}</p>
+                <p className="text-[9px] opacity-70">{edu.institution}</p>
+                <p className="text-[9px]" style={{ color: `hsl(${c.primaryColour})` }}>{edu.startDate} — {edu.endDate}</p>
               </div>
             ))}
           </div>
