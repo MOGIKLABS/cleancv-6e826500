@@ -8,7 +8,7 @@ const TemplateExecutive = ({ data, customisation: c }: Props) => {
   const { personal, experiences, education, skills } = data;
 
   return (
-    <div className="cv-shadow rounded-lg overflow-hidden bg-white w-full max-w-[640px] mx-auto" style={{ fontFamily: c.fontFamily, fontSize: `${c.fontSize}px`, color: `hsl(${c.textColour})`, aspectRatio: "8.5/11" }}>
+    <div className="cv-shadow rounded-lg overflow-hidden bg-white w-full max-w-[640px] mx-auto" style={{ fontFamily: c.fontFamily, fontSize: `${c.fontSize}px`, color: `hsl(${c.textColour})` }}>
       {/* Top gold/accent line */}
       <div className="h-1.5" style={{ backgroundColor: `hsl(${c.primaryColour})` }} />
 

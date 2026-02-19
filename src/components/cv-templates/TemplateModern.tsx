@@ -8,7 +8,7 @@ const TemplateModern = ({ data, customisation: c }: Props) => {
   const { personal, experiences, education, skills } = data;
 
   return (
-    <div className="cv-shadow rounded-lg overflow-hidden bg-white w-full max-w-[640px] mx-auto" style={{ fontFamily: c.fontFamily, fontSize: `${c.fontSize}px`, aspectRatio: "8.5/11" }}>
+    <div className="cv-shadow rounded-lg overflow-hidden bg-white w-full max-w-[640px] mx-auto" style={{ fontFamily: c.fontFamily, fontSize: `${c.fontSize}px` }}>
       {/* Header band */}
       <div className="px-6 py-4 text-white" style={{ backgroundColor: `hsl(${c.primaryColour})` }}>
         <div className="flex items-center gap-4">

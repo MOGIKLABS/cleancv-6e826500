@@ -8,7 +8,7 @@ const TemplateCreative = ({ data, customisation: c }: Props) => {
   const { personal, experiences, education, skills } = data;
 
   return (
-    <div className="cv-shadow rounded-2xl overflow-hidden bg-white w-full max-w-[640px] mx-auto" style={{ fontFamily: c.fontFamily, fontSize: `${c.fontSize}px`, aspectRatio: "8.5/11" }}>
+    <div className="cv-shadow rounded-2xl overflow-hidden bg-white w-full max-w-[640px] mx-auto" style={{ fontFamily: c.fontFamily, fontSize: `${c.fontSize}px` }}>
       {/* Diagonal header */}
       <div className="relative px-6 pt-5 pb-8" style={{ background: `linear-gradient(135deg, hsl(${c.sidebarColour}), hsl(${c.primaryColour}))` }}>
         <div className="flex items-center gap-4 text-white relative z-10">
