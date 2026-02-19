@@ -209,10 +209,12 @@ const Builder = () => {
         clone.style.top = "0";
         clone.style.zIndex = "-1";
         document.body.appendChild(clone);
-        clone.offsetHeight;
+        // Remove aspect-ratio & height constraints so clone shrinks to content
+        clone.style.removeProperty("aspect-ratio");
         clone.style.height = "auto";
         clone.style.minHeight = "0";
-        clone.style.aspectRatio = "unset";
+        clone.style.overflow = "visible";
+        void clone.offsetHeight; // force re-layout AFTER style corrections
 
         captureEl = clone;
         cleanupFn = () => {
