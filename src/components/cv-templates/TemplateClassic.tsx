@@ -25,11 +25,11 @@ const TemplateClassic = ({ data, customisation }: Props) => {
         {/* Sidebar */}
         <div className="w-[35%] p-5 flex flex-col gap-5 text-white/90" style={{ backgroundColor: `hsl(${c.sidebarColour})` }}>
           {/* Photo / Initials */}
-          <div className="w-16 h-16 rounded-full border-2 mx-auto flex items-center justify-center overflow-hidden" style={{ borderColor: `hsl(${c.primaryColour})` }}>
+          <div className="w-24 h-24 rounded-full border-2 mx-auto flex items-center justify-center overflow-hidden" style={{ borderColor: `hsl(${c.primaryColour})` }}>
             {personal.photo ? (
-              <img src={personal.photo} alt={personal.fullName} className="w-full h-full object-cover" />
+              <img src={personal.photo} alt={personal.fullName} className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
             ) : (
-              <span style={{ color: `hsl(${c.primaryColour})`, fontFamily: c.headingFont, fontWeight: c.headingBold ? 700 : 500 }} className="text-lg">
+              <span style={{ color: `hsl(${c.primaryColour})`, fontFamily: c.headingFont, fontWeight: c.headingBold ? 700 : 500 }} className="text-xl">
                 {personal.fullName.split(" ").map(n => n[0]).join("")}
               </span>
             )}
