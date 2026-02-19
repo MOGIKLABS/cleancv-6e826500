@@ -31,7 +31,6 @@ import {
 const Builder = () => {
   const navigate = useNavigate();
 
-  // Lazy-init from localStorage
   const [draftId, setDraftId] = useState<string>(() => {
     const d = loadCurrentDraft();
     return d?.id || crypto.randomUUID();
@@ -55,7 +54,6 @@ const Builder = () => {
   const classicExportRef = useRef<HTMLDivElement>(null);
 
   const saveDraft = useCallback(() => {
-    // Preserve existing custom label if one was set via rename
     const existingDrafts = loadAllDrafts();
     const existingDraft = existingDrafts.find(d => d.id === draftId);
     const currentLabel = existingDraft?.label || cvData.personal.fullName || "Untitled Draft";
@@ -68,7 +66,6 @@ const Builder = () => {
       coverLetter,
       jobDescription,
     });
-    // Also save to history
     const updated = saveDraftToHistory(saved);
     setDrafts(updated);
     setLastSaved(new Date());
@@ -76,13 +73,11 @@ const Builder = () => {
     setTimeout(() => setJustSaved(false), 2000);
   }, [draftId, cvData, customisation, coverLetter, jobDescription]);
 
-  // Auto-save every 30 seconds
   useEffect(() => {
     const interval = setInterval(saveDraft, 30000);
     return () => clearInterval(interval);
   }, [saveDraft]);
 
-  // Auto-save on tab/window close
   useEffect(() => {
     const handleBeforeUnload = () => saveDraft();
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -95,7 +90,6 @@ const Builder = () => {
     setCustomisation(draft.customisation);
     setCoverLetter(draft.coverLetter);
     setJobDescription(draft.jobDescription);
-    // Also set as current
     saveCurrentDraft({ ...draft });
     setLastSaved(new Date(draft.savedAt));
     toast.success(`Loaded draft: ${draft.label}`);
@@ -107,8 +101,6 @@ const Builder = () => {
     loadDraft(draft);
   };
 
-
-
   const getExportFilename = (prefix = "CV") => {
     const existingDrafts = loadAllDrafts();
     const currentDraft = existingDrafts.find(d => d.id === draftId);
@@ -117,158 +109,29 @@ const Builder = () => {
     return `${label}-${prefix}-${date}.pdf`;
   };
 
-  const handleExportPdf = async (target: "cv" | "cover" = "cv") => {
+  // --- THE ATS KILLER HAS BEEN REMOVED ---
+  // Native print to PDF guarantees 100% vector text and perfectly readable ATS parsers
+  const handleExportPdf = (target: "cv" | "cover" = "cv") => {
     setExporting(true);
-    try {
-      const { default: html2canvas } = await import("html2canvas");
-      const { jsPDF } = await import("jspdf");
-
-      let captureEl: HTMLElement;
-      let cleanupFn: (() => void) | null = null;
-
-      const isClassicCv = target === "cv" && customisation.template === "classic";
-
-      if (isClassicCv && classicExportRef.current) {
-        // --- Fresh-render approach for Classic template ---
-        const hiddenDiv = classicExportRef.current;
-        hiddenDiv.style.width = "794px";
-        hiddenDiv.style.position = "absolute";
-        hiddenDiv.style.left = "-9999px";
-        hiddenDiv.style.top = "0";
-        hiddenDiv.style.display = "block";
-        hiddenDiv.style.zIndex = "-1";
-
-        const cvShadow = hiddenDiv.querySelector<HTMLElement>(".cv-shadow");
-        const flexRow = cvShadow?.querySelector<HTMLElement>(":scope > div");
-        const sidebarCol = flexRow?.querySelector<HTMLElement>(":scope > div:first-child");
-        const mainCol = flexRow?.querySelector<HTMLElement>(":scope > div.flex-1") || flexRow?.querySelector<HTMLElement>(":scope > div:last-child");
-
-        // 1. Remove aspect-ratio & override Tailwind h-full with !important
-        if (cvShadow) {
-          cvShadow.style.setProperty("aspect-ratio", "unset", "important");
-          cvShadow.style.setProperty("height", "auto", "important");
-          cvShadow.style.setProperty("overflow", "visible", "important");
-        }
-        if (flexRow) {
-          flexRow.style.setProperty("height", "auto", "important");
-          flexRow.style.setProperty("min-height", "0", "important");
-        }
-
-        // 2. Force layout so columns render at natural height
-        hiddenDiv.offsetHeight;
-
-        // 3. Measure the taller column
-        const mainH = mainCol?.scrollHeight || 0;
-        const sideH = sidebarCol?.scrollHeight || 0;
-        const fullHeight = Math.max(mainH, sideH);
-
-        // 4. Set explicit pixel heights on everything
-        if (cvShadow) cvShadow.style.setProperty("height", `${fullHeight}px`, "important");
-        if (flexRow) {
-          flexRow.style.setProperty("height", `${fullHeight}px`, "important");
-          flexRow.style.setProperty("min-height", `${fullHeight}px`, "important");
-        }
-        if (sidebarCol) {
-          sidebarCol.style.setProperty("height", `${fullHeight}px`, "important");
-          sidebarCol.style.setProperty("min-height", `${fullHeight}px`, "important");
-        }
-
-        // 5. Force layout again
-        hiddenDiv.offsetHeight;
-
-        captureEl = cvShadow || hiddenDiv;
-        cleanupFn = () => {
-          hiddenDiv.style.display = "none";
-          // Reset all overrides
-          [cvShadow, flexRow, sidebarCol].forEach(el => {
-            if (!el) return;
-            el.style.removeProperty("height");
-            el.style.removeProperty("min-height");
-            el.style.removeProperty("aspect-ratio");
-            el.style.removeProperty("overflow");
-          });
-        };
-      } else {
-        // --- Standard clone approach for other templates ---
-        const elId = target === "cover" ? "cover-letter-preview" : "cv-preview";
-        const wrapper = document.getElementById(elId);
-        if (!wrapper) {
-          toast.error(`No ${target === "cover" ? "cover letter" : "CV"} preview found.`);
-          return;
-        }
-        const el = wrapper.querySelector<HTMLElement>(".cv-shadow") || wrapper;
-
-        const sigBlocks = el.querySelectorAll<HTMLElement>(".signature-block");
-        sigBlocks.forEach((b) => { b.style.pageBreakInside = "avoid"; b.style.breakInside = "avoid"; });
-
-        const clone = el.cloneNode(true) as HTMLElement;
-        clone.style.width = "794px";
-        clone.style.maxWidth = "794px";
-        clone.style.position = "absolute";
-        clone.style.left = "-9999px";
-        clone.style.top = "0";
-        clone.style.zIndex = "-1";
-        document.body.appendChild(clone);
-        clone.offsetHeight;
-        clone.style.height = "auto";
-        clone.style.minHeight = "0";
-
-        captureEl = clone;
-        cleanupFn = () => {
-          document.body.removeChild(clone);
-          sigBlocks.forEach((b) => { b.style.pageBreakInside = ""; b.style.breakInside = ""; });
-        };
-      }
-
-      const canvas = await html2canvas(captureEl, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-
-      if (cleanupFn) cleanupFn();
-
-      if (canvas.width === 0 || canvas.height === 0) {
-        toast.error("Could not capture CV preview. Please try again.");
-        return;
-      }
-
-      const A4_W = 210;
-      const A4_H = 297;
-      const MARGIN_X = 0;
-      const contentW = A4_W;
-      const imgH = (canvas.height * contentW) / canvas.width;
-
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: target === "cover" ? "a4" : [A4_W, Math.min(imgH, A4_H)] });
-      const imgData = canvas.toDataURL("image/png");
-
-      if (target === "cover" && imgH > A4_H) {
-        // Scale cover letter to fit one page
-        const fitScale = A4_H / imgH;
-        const scaledW = contentW * fitScale;
-        const scaledH = A4_H;
-        const offsetX = MARGIN_X + (contentW - scaledW) / 2;
-        pdf.addImage(imgData, "PNG", offsetX, 0, scaledW, scaledH);
-      } else if (imgH <= A4_H + 2) {
-        // Single page — content fits naturally (with 2mm tolerance for rounding)
-        pdf.addImage(imgData, "PNG", MARGIN_X, 0, contentW, Math.min(imgH, A4_H));
-      } else {
-        let y = 0;
-        while (y < imgH) {
-          if (y > 0) pdf.addPage();
-          pdf.addImage(imgData, "PNG", MARGIN_X, -y, contentW, imgH);
-          y += A4_H;
-        }
-      }
-
-      pdf.save(getExportFilename(target === "cover" ? "CoverLetter" : "CV"));
-      toast.success("PDF exported successfully.");
-    } catch (e: any) {
-      console.error("PDF export error:", e);
-      toast.error("PDF export failed. Please try again.");
-    } finally {
-      setExporting(false);
+    
+    // Switch to the correct tab first so it is visible to the print engine
+    if (target === "cover" && activeTab !== "cover") {
+      setActiveTab("cover");
+    } else if (target === "cv" && activeTab === "cover") {
+      setActiveTab("editor");
     }
+
+    // Give React 150ms to render the tab, then print
+    setTimeout(() => {
+      const originalTitle = document.title;
+      document.title = getExportFilename(target === "cover" ? "CoverLetter" : "CV").replace('.pdf', ''); 
+      
+      window.print();
+      
+      document.title = originalTitle;
+      setExporting(false);
+      toast.success("PDF dialogue opened. Be sure to select 'Save as PDF'!");
+    }, 150);
   };
 
   const editorPanel = (
@@ -330,8 +193,9 @@ const Builder = () => {
   );
 
   const previewPanel = (
-    <div className="p-4 sm:p-8 flex items-start justify-center min-h-full">
-      <div className="w-full max-w-[210mm] origin-top scale-[0.6] sm:scale-[0.75] md:scale-100">
+    <div className="p-4 sm:p-8 flex items-start justify-center min-h-full print:p-0 print:block">
+      {/* print:scale-100 absolutely forces the zoom lock off during PDF export */}
+      <div className="w-full max-w-[210mm] origin-top scale-[0.6] sm:scale-[0.75] md:scale-100 print:scale-100 print:w-full print:max-w-none">
         {activeTab === "cover" ? (
           <div id="cover-letter-preview">
             <CoverLetterPreview data={coverLetter} cvData={cvData} customisation={customisation} />
@@ -344,13 +208,14 @@ const Builder = () => {
   );
 
   return (
-    <div className="flex h-screen flex-col bg-background">
-      {/* Beta banner */}
-      <div className="bg-primary/10 text-primary text-center text-xs py-1.5 px-4 font-medium tracking-wide border-b border-primary/20">
+    <div className="flex h-screen flex-col bg-background print:h-auto print:bg-white">
+      {/* Beta banner - hidden on print */}
+      <div className="bg-primary/10 text-primary text-center text-xs py-1.5 px-4 font-medium tracking-wide border-b border-primary/20 print:hidden">
         CleanCV is currently in beta — some features under construction.
       </div>
-      {/* Top bar */}
-      <header className="flex h-14 items-center justify-between border-b border-border bg-card px-3 sm:px-4 gap-2">
+      
+      {/* Top bar - hidden on print */}
+      <header className="flex h-14 items-center justify-between border-b border-border bg-card px-3 sm:px-4 gap-2 print:hidden">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="h-8 w-8 shrink-0">
             <ArrowLeft className="h-4 w-4" />
@@ -361,7 +226,6 @@ const Builder = () => {
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Save Draft */}
           <div className="flex items-center gap-1.5">
             <Button size="sm" variant="outline" className="gap-1.5" onClick={saveDraft}>
               {justSaved ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Save className="h-3.5 w-3.5" />}
@@ -374,24 +238,12 @@ const Builder = () => {
             )}
           </div>
 
-          {/* One Page toggle */}
-          <Button
-            size="sm"
-            variant={onePage ? "default" : "outline"}
-            className="gap-1.5"
-            onClick={() => setOnePage(!onePage)}
-          >
+          <Button size="sm" variant={onePage ? "default" : "outline"} className="gap-1.5" onClick={() => setOnePage(!onePage)}>
             {onePage ? <Undo2 className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
             <span className="hidden sm:inline">{onePage ? "Revert Original" : "One Page"}</span>
           </Button>
 
-          {/* Export PDF – context-aware */}
-          <Button
-            size="sm"
-            className="gap-1.5"
-            disabled={exporting}
-            onClick={() => handleExportPdf(activeTab === "cover" ? "cover" : "cv")}
-          >
+          <Button size="sm" className="gap-1.5" disabled={exporting} onClick={() => handleExportPdf(activeTab === "cover" ? "cover" : "cv")}>
             {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
             <span className="hidden sm:inline">{activeTab === "cover" ? "Export Letter" : "Export CV"}</span>
           </Button>
@@ -399,17 +251,19 @@ const Builder = () => {
       </header>
 
       {/* Desktop: side-by-side */}
-      <div className="hidden md:flex flex-1 overflow-hidden">
-        <div className="w-1/2 border-r border-border flex flex-col">
+      <div className="hidden md:flex flex-1 overflow-hidden print:flex print:overflow-visible">
+        {/* Editor sidebar - hidden on print */}
+        <div className="w-1/2 border-r border-border flex flex-col print:hidden">
           {editorPanel}
         </div>
-        <div className="w-1/2 bg-muted/50 overflow-auto">
+        {/* Preview pane - expands to full width on print */}
+        <div className="w-1/2 bg-muted/50 overflow-auto print:w-full print:bg-white print:overflow-visible print:p-0">
           {previewPanel}
         </div>
       </div>
 
-      {/* Mobile: toggled view */}
-      <div className="flex md:hidden flex-1 flex-col overflow-hidden">
+      {/* Mobile: toggled view - completely hidden on print */}
+      <div className="flex md:hidden flex-1 flex-col overflow-hidden print:hidden">
         <div className={`flex-1 overflow-hidden flex flex-col ${mobileView === "editor" ? "" : "hidden"}`}>
           {editorPanel}
         </div>
@@ -417,35 +271,19 @@ const Builder = () => {
           {previewPanel}
         </div>
 
-        {/* Mobile toggle bar */}
         <div className="border-t border-border bg-card flex">
-          <button
-            onClick={() => setMobileView("editor")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs uppercase tracking-widest transition-colors ${
-              mobileView === "editor" ? "text-foreground bg-muted/50" : "text-muted-foreground"
-            }`}
-          >
+          <button onClick={() => setMobileView("editor")} className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs uppercase tracking-widest transition-colors ${mobileView === "editor" ? "text-foreground bg-muted/50" : "text-muted-foreground"}`}>
             <PenLine className="h-4 w-4" />
             Editor
           </button>
-          <button
-            onClick={() => setMobileView("preview")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs uppercase tracking-widest transition-colors ${
-              mobileView === "preview" ? "text-foreground bg-muted/50" : "text-muted-foreground"
-            }`}
-          >
+          <button onClick={() => setMobileView("preview")} className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs uppercase tracking-widest transition-colors ${mobileView === "preview" ? "text-foreground bg-muted/50" : "text-muted-foreground"}`}>
             <Eye className="h-4 w-4" />
             Preview
           </button>
         </div>
       </div>
 
-      {/* Hidden offscreen Classic template for PDF export — avoids clone inheritance issues */}
-      <div
-        ref={classicExportRef}
-        style={{ display: "none", position: "absolute", left: "-9999px", top: 0, width: "794px", zIndex: -1 }}
-        className={onePage ? "one-page-mode" : ""}
-      >
+      <div ref={classicExportRef} style={{ display: "none", position: "absolute", left: "-9999px", top: 0, width: "794px", zIndex: -1 }} className={onePage ? "one-page-mode" : ""}>
         <TemplateClassic data={cvData} customisation={customisation} />
       </div>
     </div>
