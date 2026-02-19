@@ -215,6 +215,8 @@ const Builder = () => {
         clone.style.minHeight = "0";
         clone.style.overflow = "visible";
         void clone.offsetHeight; // force re-layout AFTER style corrections
+        // Lock to measured content height so html2canvas captures exactly this
+        clone.style.height = `${clone.scrollHeight}px`;
 
         captureEl = clone;
         cleanupFn = () => {
