@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, ArrowLeft, Download, Sparkles, Loader2, Eye, PenLine, Save, Check, FileDown, Maximize, Undo2 } from "lucide-react";
+import { FileText, ArrowLeft, Loader2, Eye, PenLine, Save, Check, FileDown, Maximize, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,7 +40,7 @@ const Builder = () => {
   const [coverLetter, setCoverLetter] = useState<CoverLetterData>(() => loadCurrentDraft()?.coverLetter ?? { ...defaultCoverLetterData });
   const [jobDescription, setJobDescription] = useState(() => loadCurrentDraft()?.jobDescription ?? "");
   const [activeTab, setActiveTab] = useState("editor");
-  const [polishing, setPolishing] = useState(false);
+  
   const [mobileView, setMobileView] = useState<"editor" | "preview">("editor");
   const [lastSaved, setLastSaved] = useState<Date | null>(() => {
     const d = loadCurrentDraft();
@@ -104,21 +104,7 @@ const Builder = () => {
     loadDraft(draft);
   };
 
-  const handlePolish = async () => {
-    setPolishing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("cv-ai", {
-        body: { action: "polish", cvData }
-      });
-      if (error) throw error;
-      setCvData(data as CVData);
-      toast.success("CV polished with UK English and industry-appropriate language.");
-    } catch (e: any) {
-      toast.error(e.message || "Polish failed. Please try again.");
-    } finally {
-      setPolishing(false);
-    }
-  };
+
 
   const getExportFilename = (prefix = "CV") => {
     const existingDrafts = loadAllDrafts();
@@ -301,19 +287,6 @@ const Builder = () => {
             {onePage ? <Undo2 className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
             <span className="hidden sm:inline">{onePage ? "Revert Original" : "One Page"}</span>
           </Button>
-
-          {/* Polish – hide on cover letter tab */}
-          {activeTab !== "cover" && (
-            <>
-              <Button size="sm" variant="outline" className="gap-1.5 hidden sm:inline-flex" onClick={handlePolish} disabled={polishing}>
-                {polishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-                <span className="hidden md:inline">{polishing ? "Polishing..." : "Polish CV"}</span>
-              </Button>
-              <Button size="sm" variant="outline" className="gap-1.5 sm:hidden" onClick={handlePolish} disabled={polishing}>
-                {polishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-              </Button>
-            </>
-          )}
 
           {/* Export PDF – context-aware */}
           <Button
