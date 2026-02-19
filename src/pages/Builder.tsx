@@ -126,8 +126,51 @@ const Builder = () => {
     return el.outerHTML;
   };
 
-  const handleExportPdf = () => {
-    window.print();
+  const handleExportPdf = async () => {
+    setExporting(true);
+    try {
+      const el = document.getElementById("cv-preview");
+      if (!el) {
+        toast.error("No CV preview found. Switch to preview first.");
+        return;
+      }
+
+      const { default: html2canvas } = await import("html2canvas");
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const A4_W = 210;
+      const A4_H = 297;
+      const imgW = A4_W;
+      const imgH = (canvas.height * A4_W) / canvas.width;
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const imgData = canvas.toDataURL("image/png");
+
+      if (imgH <= A4_H) {
+        pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH);
+      } else {
+        let y = 0;
+        while (y < imgH) {
+          if (y > 0) pdf.addPage();
+          pdf.addImage(imgData, "PNG", 0, -y, imgW, imgH);
+          y += A4_H;
+        }
+      }
+
+      pdf.save(`${cvData.personal.fullName || "CV"}.pdf`);
+      toast.success("PDF exported successfully.");
+    } catch (e: any) {
+      console.error("PDF export error:", e);
+      toast.error("PDF export failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleExportDocx = async () => {
