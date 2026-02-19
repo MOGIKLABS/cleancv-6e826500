@@ -16,7 +16,7 @@ const TemplateExecutive = ({ data, customisation: c }: Props) => {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-4">
             {personal.photo ? (
-              <img src={personal.photo} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-offset-2" style={{ outlineColor: `hsl(${c.primaryColour})` }} />
+              <img src={personal.photo} alt="" className="w-14 h-14 rounded-full object-cover" style={{ boxShadow: `0 0 0 2px white, 0 0 0 4px hsl(${c.primaryColour})` }} />
             ) : null}
             <div>
               <h1 className="text-2xl tracking-tight" style={{ fontFamily: c.headingFont, fontWeight: c.headingBold ? 700 : 500, letterSpacing: "-0.02em" }}>{personal.fullName}</h1>
