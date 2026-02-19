@@ -45,7 +45,16 @@ const CustomisationPanel = ({ value, onChange }: Props) => {
           {templates.map(t => (
             <button
               key={t.value}
-              onClick={() => update({ template: t.value })}
+              onClick={() => {
+                const updates: Partial<CVCustomisation> = { template: t.value };
+                if (t.value === "classic" && value.sidebarColour === "0 0% 96%") {
+                  updates.sidebarColour = "0 0% 0%";
+                }
+                if (t.value !== "classic" && value.template === "classic" && value.sidebarColour === "0 0% 0%") {
+                  updates.sidebarColour = "0 0% 96%";
+                }
+                update(updates);
+              }}
               className={`rounded-lg border p-2 text-xs font-medium text-center transition-all ${value.template === t.value ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:border-primary/50"}`}
             >
               {t.label}
