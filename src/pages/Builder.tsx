@@ -13,7 +13,6 @@ import DraftsPanel from "@/components/DraftsPanel";
 import TemplateSwitcherStrip from "@/components/TemplateSwitcherStrip";
 
 import CoverLetterEditor from "@/components/CoverLetterEditor";
-import { TemplateClassic } from "@/components/cv-templates";
 import CoverLetterPreview from "@/components/CoverLetterPreview";
 import { CVData, CVCustomisation, CoverLetterData, defaultCVData, defaultCustomisation, defaultCoverLetterData } from "@/types/cv";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,7 +51,6 @@ const Builder = () => {
   const [exporting, setExporting] = useState(false);
   const [drafts, setDrafts] = useState<DraftData[]>(() => loadAllDrafts());
 
-  const classicExportRef = useRef<HTMLDivElement>(null);
 
   const saveDraft = useCallback(() => {
     // Preserve existing custom label if one was set via rename
@@ -123,131 +121,123 @@ const Builder = () => {
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
 
-      let captureEl: HTMLElement;
-      let cleanupFn: (() => void) | null = null;
+      const elId = target === "cover" ? "cover-letter-preview" : "cv-preview";
+      const wrapper = document.getElementById(elId);
+      if (!wrapper) {
+        toast.error(`No ${target === "cover" ? "cover letter" : "CV"} preview found.`);
+        return;
+      }
+      const el = wrapper.querySelector<HTMLElement>(".cv-shadow") || wrapper;
+      const isClassic = target === "cv" && customisation.template === "classic";
 
-      const isClassicCv = target === "cv" && customisation.template === "classic";
+      // Page-break hints
+      const sigBlocks = el.querySelectorAll<HTMLElement>(".signature-block");
+      sigBlocks.forEach((b) => { b.style.pageBreakInside = "avoid"; b.style.breakInside = "avoid"; });
 
-      if (isClassicCv && classicExportRef.current) {
-        // --- Fresh-render approach for Classic template ---
-        const hiddenDiv = classicExportRef.current;
-        hiddenDiv.style.width = "794px";
-        hiddenDiv.style.position = "absolute";
-        hiddenDiv.style.left = "-9999px";
-        hiddenDiv.style.top = "0";
-        hiddenDiv.style.display = "block";
-        hiddenDiv.style.zIndex = "-1";
+      // Clone off-screen at A4 export width (794px ≈ 210mm @ 96 DPI)
+      const EXPORT_W = 794;
+      const clone = el.cloneNode(true) as HTMLElement;
+      // Remove aspect-ratio FIRST (before setting any other properties)
+      clone.style.removeProperty("aspect-ratio");
+      clone.style.position = "absolute";
+      clone.style.left = "-9999px";
+      clone.style.top = "0";
+      clone.style.zIndex = "-1";
+      clone.style.width = `${EXPORT_W}px`;
+      clone.style.maxWidth = `${EXPORT_W}px`;
+      clone.style.height = "auto";
+      clone.style.minHeight = "0";
+      clone.style.overflow = "visible";
 
-        const cvShadow = hiddenDiv.querySelector<HTMLElement>(".cv-shadow");
-        const flexRow = cvShadow?.querySelector<HTMLElement>(":scope > div");
+      document.body.appendChild(clone);
+
+      // Classic: override inner flex container heights, then match sidebar to content
+      if (isClassic) {
+        const flexRow = clone.querySelector<HTMLElement>(":scope > div");
         const sidebarCol = flexRow?.querySelector<HTMLElement>(":scope > div:first-child");
-        const mainCol = flexRow?.querySelector<HTMLElement>(":scope > div.flex-1") || flexRow?.querySelector<HTMLElement>(":scope > div:last-child");
+        const mainCol = flexRow?.querySelector<HTMLElement>(":scope > div.flex-1")
+          || flexRow?.querySelector<HTMLElement>(":scope > div:last-child");
 
-        // 1. Physically strip aspect-ratio from cssText (JS property overrides can be unreliable)
-        const savedCssText = cvShadow?.style.cssText || "";
-        if (cvShadow) {
-          cvShadow.style.cssText = cvShadow.style.cssText.replace(/aspect-ratio\s*:[^;]+;?\s*/gi, "");
-          cvShadow.style.width = "794px";
-          cvShadow.style.maxWidth = "794px";
-          cvShadow.style.height = "auto";
-          cvShadow.style.overflow = "visible";
-        }
-        if (flexRow) {
-          flexRow.style.height = "auto";
-          flexRow.style.minHeight = "0";
-        }
+        if (flexRow) { flexRow.style.height = "auto"; flexRow.style.minHeight = "0"; }
+        void clone.offsetHeight; // force layout to measure natural column heights
 
-        // 2. Force layout so columns render at natural height
-        void hiddenDiv.offsetHeight;
-
-        // 3. Measure the taller column
         const mainH = mainCol?.scrollHeight || 0;
         const sideH = sidebarCol?.scrollHeight || 0;
-        const fullHeight = Math.max(mainH, sideH);
+        const fullH = Math.max(mainH, sideH);
 
-        // 4. Set explicit pixel heights so sidebar fills to match content
-        if (cvShadow) cvShadow.style.height = `${fullHeight}px`;
-        if (flexRow) {
-          flexRow.style.height = `${fullHeight}px`;
-          flexRow.style.minHeight = `${fullHeight}px`;
-        }
-        if (sidebarCol) {
-          sidebarCol.style.height = `${fullHeight}px`;
-          sidebarCol.style.minHeight = `${fullHeight}px`;
-        }
-
-        // 5. Force layout again
-        void hiddenDiv.offsetHeight;
-
-        captureEl = cvShadow || hiddenDiv;
-        cleanupFn = () => {
-          hiddenDiv.style.display = "none";
-          // Restore original cssText + reset overrides
-          if (cvShadow) cvShadow.style.cssText = savedCssText;
-          [flexRow, sidebarCol].forEach(el => {
-            if (!el) return;
-            el.style.removeProperty("height");
-            el.style.removeProperty("min-height");
-          });
-        };
-      } else {
-        // --- Standard clone approach for other templates ---
-        const elId = target === "cover" ? "cover-letter-preview" : "cv-preview";
-        const wrapper = document.getElementById(elId);
-        if (!wrapper) {
-          toast.error(`No ${target === "cover" ? "cover letter" : "CV"} preview found.`);
-          return;
-        }
-        const el = wrapper.querySelector<HTMLElement>(".cv-shadow") || wrapper;
-
-        const sigBlocks = el.querySelectorAll<HTMLElement>(".signature-block");
-        sigBlocks.forEach((b) => { b.style.pageBreakInside = "avoid"; b.style.breakInside = "avoid"; });
-
-        const clone = el.cloneNode(true) as HTMLElement;
-        clone.style.width = "794px";
-        clone.style.maxWidth = "794px";
-        clone.style.position = "absolute";
-        clone.style.left = "-9999px";
-        clone.style.top = "0";
-        clone.style.zIndex = "-1";
-        // Physically strip aspect-ratio from cssText before appending
-        clone.style.cssText = clone.style.cssText.replace(/aspect-ratio\s*:[^;]+;?\s*/gi, "");
-        clone.style.height = "auto";
-        clone.style.minHeight = "0";
-        clone.style.overflow = "visible";
-        document.body.appendChild(clone);
-        void clone.offsetHeight; // force layout
-        // Lock to measured content height so html2canvas captures exactly this
-        clone.style.height = `${clone.scrollHeight}px`;
-
-        captureEl = clone;
-        cleanupFn = () => {
-          document.body.removeChild(clone);
-          sigBlocks.forEach((b) => { b.style.pageBreakInside = ""; b.style.breakInside = ""; });
-        };
+        clone.style.height = `${fullH}px`;
+        if (flexRow)    { flexRow.style.height = `${fullH}px`;    flexRow.style.minHeight = `${fullH}px`; }
+        if (sidebarCol) { sidebarCol.style.height = `${fullH}px`; sidebarCol.style.minHeight = `${fullH}px`; }
       }
 
-      // Pass explicit dimensions so html2canvas captures exactly the content area
-      const captureW = captureEl.scrollWidth;
-      const captureH = captureEl.scrollHeight;
-      const canvas = await html2canvas(captureEl, {
+      void clone.offsetHeight; // force final layout
+      if (!isClassic) {
+        clone.style.height = `${clone.scrollHeight}px`;
+      }
+
+      // Collect link positions from the clone (at export width) for PDF annotations
+      const cloneRect = clone.getBoundingClientRect();
+      const pxToMm = 210 / EXPORT_W;
+      const linkAnnotations: Array<{ x: number; y: number; w: number; h: number; url: string }> = [];
+      clone.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((a) => {
+        const href = a.getAttribute("href");
+        if (!href || href === "#") return;
+        const url = href.startsWith("mailto:") || href.startsWith("http") ? href : `https://${href}`;
+        const r = a.getBoundingClientRect();
+        linkAnnotations.push({
+          x: (r.left - cloneRect.left) * pxToMm,
+          y: (r.top - cloneRect.top) * pxToMm,
+          w: r.width * pxToMm,
+          h: r.height * pxToMm,
+          url,
+        });
+      });
+
+      const captureH = clone.scrollHeight;
+      let canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
-        width: captureW,
+        width: EXPORT_W,
         height: captureH,
       });
 
-      if (cleanupFn) cleanupFn();
+      document.body.removeChild(clone);
+      sigBlocks.forEach((b) => { b.style.pageBreakInside = ""; b.style.breakInside = ""; });
 
       if (canvas.width === 0 || canvas.height === 0) {
         toast.error("Could not capture CV preview. Please try again.");
         return;
       }
 
+      // Safety net: trim trailing white rows from the canvas
+      try {
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const px = imgData.data;
+          let lastContentY = 0;
+          for (let y = canvas.height - 1; y >= 0; y--) {
+            let found = false;
+            for (let x = 0; x < canvas.width; x += 3) {
+              const i = (y * canvas.width + x) * 4;
+              if (px[i] < 250 || px[i + 1] < 250 || px[i + 2] < 250) { found = true; break; }
+            }
+            if (found) { lastContentY = y; break; }
+          }
+          const trimH = Math.min(lastContentY + 40, canvas.height); // 40px padding at 2× scale
+          if (trimH < canvas.height * 0.95) {
+            const trimmed = document.createElement("canvas");
+            trimmed.width = canvas.width;
+            trimmed.height = trimH;
+            trimmed.getContext("2d")!.drawImage(canvas, 0, 0, canvas.width, trimH, 0, 0, canvas.width, trimH);
+            canvas = trimmed;
+          }
+        }
+      } catch (_) { /* tainted canvas — skip cropping */ }
+
       const A4_W = 210;
       const A4_H = 297;
-      const MARGIN_X = 0;
       const contentW = A4_W;
       const imgH = (canvas.height * contentW) / canvas.width;
 
@@ -259,19 +249,24 @@ const Builder = () => {
         const fitScale = A4_H / imgH;
         const scaledW = contentW * fitScale;
         const scaledH = A4_H;
-        const offsetX = MARGIN_X + (contentW - scaledW) / 2;
+        const offsetX = (contentW - scaledW) / 2;
         pdf.addImage(imgData, "PNG", offsetX, 0, scaledW, scaledH);
       } else if (imgH <= A4_H + 2) {
         // Single page — content fits naturally (with 2mm tolerance for rounding)
-        pdf.addImage(imgData, "PNG", MARGIN_X, 0, contentW, Math.min(imgH, A4_H));
+        pdf.addImage(imgData, "PNG", 0, 0, contentW, Math.min(imgH, A4_H));
       } else {
         let y = 0;
         while (y < imgH) {
           if (y > 0) pdf.addPage();
-          pdf.addImage(imgData, "PNG", MARGIN_X, -y, contentW, imgH);
+          pdf.addImage(imgData, "PNG", 0, -y, contentW, imgH);
           y += A4_H;
         }
       }
+
+      // Add clickable link annotations over the raster image
+      linkAnnotations.forEach(({ x, y, w, h, url }) => {
+        pdf.link(x, y, w, h, { url });
+      });
 
       pdf.save(getExportFilename(target === "cover" ? "CoverLetter" : "CV"));
       toast.success("PDF exported successfully.");
@@ -452,14 +447,6 @@ const Builder = () => {
         </div>
       </div>
 
-      {/* Hidden offscreen Classic template for PDF export — avoids clone inheritance issues */}
-      <div
-        ref={classicExportRef}
-        style={{ display: "none", position: "absolute", left: "-9999px", top: 0, width: "794px", zIndex: -1 }}
-        className={onePage ? "one-page-mode" : ""}
-      >
-        <TemplateClassic data={cvData} customisation={customisation} />
-      </div>
     </div>
   );
 };
