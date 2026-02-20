@@ -137,8 +137,17 @@ const Builder = () => {
       // Clone off-screen at A4 export width (794px ≈ 210mm @ 96 DPI)
       const EXPORT_W = 794;
       const clone = el.cloneNode(true) as HTMLElement;
-      // Remove aspect-ratio FIRST (before setting any other properties)
-      clone.style.removeProperty("aspect-ratio");
+
+      // --- Aggressive aspect-ratio removal (triple-redundant) ---
+      // 1. Strip from the raw HTML style attribute via regex
+      const rawStyle = clone.getAttribute("style") || "";
+      clone.setAttribute("style", rawStyle.replace(/aspect-ratio\s*:[^;]*;?\s*/gi, ""));
+      // 2. Inject a <style> tag that overrides any remaining aspect-ratio
+      const cssOverride = document.createElement("style");
+      cssOverride.textContent = "* { aspect-ratio: auto !important; }";
+      clone.prepend(cssOverride);
+
+      // Set export layout properties (appended after the cleaned attribute)
       clone.style.position = "absolute";
       clone.style.left = "-9999px";
       clone.style.top = "0";
@@ -152,6 +161,7 @@ const Builder = () => {
       document.body.appendChild(clone);
 
       // Classic: override inner flex container heights, then match sidebar to content
+      let measuredContentH = 0;
       if (isClassic) {
         const flexRow = clone.querySelector<HTMLElement>(":scope > div");
         const sidebarCol = flexRow?.querySelector<HTMLElement>(":scope > div:first-child");
@@ -163,16 +173,17 @@ const Builder = () => {
 
         const mainH = mainCol?.scrollHeight || 0;
         const sideH = sidebarCol?.scrollHeight || 0;
-        const fullH = Math.max(mainH, sideH);
+        measuredContentH = Math.max(mainH, sideH);
 
-        clone.style.height = `${fullH}px`;
-        if (flexRow)    { flexRow.style.height = `${fullH}px`;    flexRow.style.minHeight = `${fullH}px`; }
-        if (sidebarCol) { sidebarCol.style.height = `${fullH}px`; sidebarCol.style.minHeight = `${fullH}px`; }
+        clone.style.height = `${measuredContentH}px`;
+        if (flexRow)    { flexRow.style.height = `${measuredContentH}px`;    flexRow.style.minHeight = `${measuredContentH}px`; }
+        if (sidebarCol) { sidebarCol.style.height = `${measuredContentH}px`; sidebarCol.style.minHeight = `${measuredContentH}px`; }
       }
 
       void clone.offsetHeight; // force final layout
       if (!isClassic) {
-        clone.style.height = `${clone.scrollHeight}px`;
+        measuredContentH = clone.scrollHeight;
+        clone.style.height = `${measuredContentH}px`;
       }
 
       // Collect link positions from the clone (at export width) for PDF annotations
@@ -193,13 +204,12 @@ const Builder = () => {
         });
       });
 
-      const captureH = clone.scrollHeight;
       let canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
         width: EXPORT_W,
-        height: captureH,
+        height: measuredContentH,
       });
 
       document.body.removeChild(clone);
@@ -210,7 +220,18 @@ const Builder = () => {
         return;
       }
 
-      // Safety net: trim trailing white rows from the canvas
+      // Deterministic crop: if the canvas is taller than the measured content
+      // (e.g. html2canvas captured extra space), crop to the measured height.
+      const expectedCanvasH = measuredContentH * 2; // html2canvas scale is 2
+      if (canvas.height > expectedCanvasH + 20) {
+        const cropped = document.createElement("canvas");
+        cropped.width = canvas.width;
+        cropped.height = expectedCanvasH;
+        cropped.getContext("2d")!.drawImage(canvas, 0, 0);
+        canvas = cropped;
+      }
+
+      // Pixel-scan fallback: trim any remaining trailing white rows
       try {
         const ctx = canvas.getContext("2d");
         if (ctx) {
@@ -219,13 +240,15 @@ const Builder = () => {
           let lastContentY = 0;
           for (let y = canvas.height - 1; y >= 0; y--) {
             let found = false;
-            for (let x = 0; x < canvas.width; x += 3) {
+            // Only scan the right 60% of the canvas (avoids sidebar false-positives)
+            const startX = Math.floor(canvas.width * 0.4);
+            for (let x = startX; x < canvas.width; x += 3) {
               const i = (y * canvas.width + x) * 4;
               if (px[i] < 250 || px[i + 1] < 250 || px[i + 2] < 250) { found = true; break; }
             }
             if (found) { lastContentY = y; break; }
           }
-          const trimH = Math.min(lastContentY + 40, canvas.height); // 40px padding at 2× scale
+          const trimH = Math.min(lastContentY + 40, canvas.height);
           if (trimH < canvas.height * 0.95) {
             const trimmed = document.createElement("canvas");
             trimmed.width = canvas.width;
@@ -234,7 +257,7 @@ const Builder = () => {
             canvas = trimmed;
           }
         }
-      } catch (_) { /* tainted canvas — skip cropping */ }
+      } catch (_) { /* tainted canvas — skip pixel scan */ }
 
       const A4_W = 210;
       const A4_H = 297;
@@ -242,23 +265,21 @@ const Builder = () => {
       const imgH = (canvas.height * contentW) / canvas.width;
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: target === "cover" ? "a4" : [A4_W, Math.min(imgH, A4_H)] });
-      const imgData = canvas.toDataURL("image/png");
+      const pngData = canvas.toDataURL("image/png");
 
       if (target === "cover" && imgH > A4_H) {
-        // Scale cover letter to fit one page
         const fitScale = A4_H / imgH;
         const scaledW = contentW * fitScale;
         const scaledH = A4_H;
         const offsetX = (contentW - scaledW) / 2;
-        pdf.addImage(imgData, "PNG", offsetX, 0, scaledW, scaledH);
+        pdf.addImage(pngData, "PNG", offsetX, 0, scaledW, scaledH);
       } else if (imgH <= A4_H + 2) {
-        // Single page — content fits naturally (with 2mm tolerance for rounding)
-        pdf.addImage(imgData, "PNG", 0, 0, contentW, Math.min(imgH, A4_H));
+        pdf.addImage(pngData, "PNG", 0, 0, contentW, Math.min(imgH, A4_H));
       } else {
         let y = 0;
         while (y < imgH) {
           if (y > 0) pdf.addPage();
-          pdf.addImage(imgData, "PNG", 0, -y, contentW, imgH);
+          pdf.addImage(pngData, "PNG", 0, -y, contentW, imgH);
           y += A4_H;
         }
       }
