@@ -171,7 +171,7 @@
     print-color-adjust: exact !important;
   }
 
-  /* Flatten root containers */
+  /* Flatten root containers so there's no scroll / overflow wrapper */
   html, body, #root {
     display: block !important;
     height: auto !important;
@@ -182,53 +182,70 @@
     background: white !important;
   }
 
-  /* Remove the preview scaling transform (scale-[0.6] etc.) */
+  /* Kill the preview-pane scaling transform (scale-[0.6] etc.) */
   [class*="origin-top"][class*="scale-"] {
     transform: none !important;
     width: 210mm !important;
-    max-width: 210mm !important;
+    max-width: none !important;
   }
 
-  /* CV preview wrapper */
+  /* Wrappers around the CV card — no spacing */
   #cv-preview,
   #cover-letter-preview {
     padding: 0 !important;
     margin: 0 !important;
     width: 210mm !important;
-    max-width: 210mm !important;
+    max-width: none !important;
   }
 
-  /* The CV: A4 width, no decorative styles, content-driven height */
+  /*
+   * The CV paper itself (.cv-shadow on every template).
+   * - width: 210mm  → A4 width  (overrides max-w-[640px])
+   * - max-width: none  → removes the 640px cap
+   * - aspect-ratio: auto  → removes US-Letter 8.5/11 ratio
+   * - min-height: 297mm  → fills at least one A4 page
+   * - margin: 0  → kills mx-auto centering
+   * - overflow: visible  → lets multi-page content flow
+   */
   .cv-shadow {
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
     width: 210mm !important;
-    max-width: 210mm !important;
+    max-width: none !important;
     margin: 0 !important;
+    aspect-ratio: auto !important;
+    height: auto !important;
+    min-height: 297mm !important;
+    overflow: visible !important;
     position: relative !important;
   }
 
-  /* Normal mode: content flows across however many pages it needs */
-  #cv-preview:not(.one-page-mode) .cv-shadow {
-    aspect-ratio: auto !important;
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-  }
-
-  /* One-page mode: exactly one A4 page, clip overflow */
+  /* One-page mode: exactly one A4, clip overflow */
   .one-page-mode .cv-shadow {
-    width: 210mm !important;
     height: 297mm !important;
     max-height: 297mm !important;
+    min-height: 297mm !important;
     overflow: hidden !important;
     page-break-inside: avoid !important;
   }
 
-  /* Links: keep them clickable and visible */
+  /* Classic template sidebar: stretch to fill the page */
+  .cv-shadow > .flex.h-full {
+    min-height: 297mm !important;
+  }
+
+  /*
+   * Links — must be clickable in Chrome "Save as PDF".
+   * Chrome needs a positioned box with z-index to generate
+   * a PDF link annotation. inline-flex keeps icon+text layout
+   * intact while giving the <a> a proper hit-area box.
+   */
   a[href] {
+    position: relative !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+    display: inline-flex !important;
     color: inherit !important;
-    text-decoration: underline !important;
   }
 }
