@@ -165,6 +165,49 @@
     margin: 0;
   }
 
+  /*
+   * Force Tailwind print: utilities to use !important.
+   * Without this, responsive utilities like md:flex can override
+   * print:hidden because both media queries match during printing
+   * on desktop-width viewports, and CSS source order decides the winner.
+   */
+  .print\:hidden {
+    display: none !important;
+  }
+  .print\:flex {
+    display: flex !important;
+  }
+  .print\:block {
+    display: block !important;
+  }
+  .print\:w-full {
+    width: 100% !important;
+  }
+  .print\:bg-white {
+    background-color: white !important;
+  }
+  .print\:overflow-visible {
+    overflow: visible !important;
+  }
+  .print\:p-0 {
+    padding: 0 !important;
+  }
+  .print\:scale-100 {
+    transform: scale(1) !important;
+  }
+  .print\:max-w-none {
+    max-width: none !important;
+  }
+  .print\:h-auto {
+    height: auto !important;
+  }
+
+  /* Hide toast / notification portals that may be visible during print */
+  [data-sonner-toaster],
+  [data-radix-popper-content-wrapper] {
+    display: none !important;
+  }
+
   /* Preserve background colors (sidebar, skill badges, etc.) */
   * {
     -webkit-print-color-adjust: exact !important;
